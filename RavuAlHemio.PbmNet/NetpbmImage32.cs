@@ -3,12 +3,12 @@
 namespace RavuAlHemio.PbmNet
 {
     /// <summary>
-    /// A PAM, PGM or PPM image with 32 bits per pixel.
+    /// An in-memory representation of a Netpbm image with 32 bits per pixel component.
     /// </summary>
-    public class PamPgmPpmImage32 : PamPgmPpmImage<uint>
+    public class NetpbmImage32 : NetpbmImage<uint>
     {
-        public PamPgmPpmImage32(int width, int height, uint highestComponentValue, IEnumerable<Component> components,
-            IEnumerable<IEnumerable<IEnumerable<uint>>> pixelData)
+        public NetpbmImage32(int width, int height, uint highestComponentValue, IEnumerable<Component> components,
+            IEnumerable<IEnumerable<uint>> pixelData)
             : base(width, height, highestComponentValue, components, pixelData)
         {
         }
@@ -18,7 +18,7 @@ namespace RavuAlHemio.PbmNet
             get { return 4; }
         }
 
-        protected override double ScalePixelComponent(uint pixelComponent)
+        public override double ScalePixelComponent(uint pixelComponent)
         {
             return pixelComponent / (double)HighestComponentValue;
         }

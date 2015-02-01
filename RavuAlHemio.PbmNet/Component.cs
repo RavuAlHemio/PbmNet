@@ -11,10 +11,9 @@
         Unknown = 0,
 
         /// <summary>
-        /// The gray component in a grayscale image, or the black component in a CMYK image. The lowest value is black,
-        /// the highest value is white.
+        /// The white component in an additive grayscale image. The lowest value is black, the highest value is white.
         /// </summary>
-        Gray = 1,
+        White = 1,
         
         /// <summary>
         /// The red component in an RGB image. The lowest value is "no red", the highest is "full red".
@@ -48,9 +47,15 @@
         Yellow = 7,
 
         /// <summary>
+        /// The black component in a subtractive grayscale or CMYK image. The lowest value is "no black", the highest is
+        /// "full black".
+        /// </summary>
+        Black = 8,
+
+        /// <summary>
         /// The alpha component in an image with transparency. The lowest value is "completely transparent", the highest
         /// is "fully opaque".
         /// </summary>
-        Alpha = 8
+        Alpha = 9
     }
 }

@@ -40,8 +40,14 @@
 
         /// <summary>
         /// The PAM (Portable Arbitrary Map) image format. Represents effectively any kind of image using a binary
-        /// encoding.
+        /// encoding. The maximum pixel component value is constrained to <value>65535</value>.
         /// </summary>
-        PAM = 7
+        PAM = 7,
+
+        /// <summary>
+        /// The unofficial Big PAM (Portable Arbitrary Map) image format. Represents effectively any kind of image using
+        /// a binary encoding. The maximum pixel component value is unconstrained.
+        /// </summary>
+        BigPAM = 70
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace RavuAlHemio.PbmNet
@@ -43,9 +44,36 @@ namespace RavuAlHemio.PbmNet
         public TPixelComponent HighestComponentValue { get; protected set; }
 
         /// <summary>
+        /// Stores whether this image is a bitmap (only allows two values per pixel component).
+        /// </summary>
+        /// <value><c>true</c> if this image is a bitmap; otherwise, <c>false</c>.</value>
+        public abstract bool IsBitmap { get; }
+
+        /// <summary>
         /// Scales a pixel into the interval [<value>0.0</value>, <value>1.0</value>].
         /// </summary>
         public abstract double ScalePixelComponent(TPixelComponent pixelComponent);
+
+        /// <summary>
+        /// Inverts the given pixel value (subtracts it from <see cref="HighestComponentValue"/>).
+        /// </summary>
+        /// <returns>The inverted pixel value.</returns>
+        /// <param name="pixelComponent">The value to invert.</param>
+        internal abstract TPixelComponent InvertPixelValue(TPixelComponent pixelComponent);
+
+        /// <summary>
+        /// Converts a pixel component value into a sequence of bytes, most significant byte first (big-endian format).
+        /// </summary>
+        /// <returns>The sequence of bytes representing the pixel component value.</returns>
+        /// <param name="pixelComponent">The pixel component value to encode.</param>
+        internal abstract IEnumerable<byte> ComponentToBigEndianBytes(TPixelComponent pixelComponent);
+
+        /// <summary>
+        /// Returns whether the given pixel component value is the zero value.
+        /// </summary>
+        /// <returns><c>true</c> if the given pixel component value is the zero value; <c>false</c> otherwise.</returns>
+        /// <param name="componentValue">The component whose value to check for zero.</param>
+        internal abstract bool IsComponentValueZero(TPixelComponent componentValue);
 
         /// <summary>
         /// Obtains the actual values of the pixel at the given coordinates, as a list of components (in the order
@@ -69,7 +97,10 @@ namespace RavuAlHemio.PbmNet
                     string.Format("y ({0}) must be at least 0 and less than the height of the image ({1})", y, Height));
             }
             var retArray = Rows[y].Skip(x * Components.Count).Take(Components.Count).ToArray();
-            return new ReadOnlyCollection<TPixelComponent>(retArray);
+            var ret = new ReadOnlyCollection<TPixelComponent>(retArray);
+            Contract.Ensures(ret.Count == Components.Count);
+            Contract.Ensures(ret.All(IsPixelComponentInRange));
+            return ret;
         }
 
         /// <summary>
@@ -83,7 +114,10 @@ namespace RavuAlHemio.PbmNet
         public IList<double> GetScaledPixel(int x, int y)
         {
             var retArray = GetNativePixel(x, y).Select(p => ScalePixelComponent(p)).ToArray();
-            return new ReadOnlyCollection<double>(retArray);
+            var ret = new ReadOnlyCollection<double>(retArray);
+            Contract.Ensures(ret.Count == Components.Count);
+            Contract.Ensures(ret.All(component => component >= 0.0 && component <= 1.0));
+            return ret;
         }
 
         /// <summary>
@@ -103,6 +137,14 @@ namespace RavuAlHemio.PbmNet
         }
 
         /// <summary>
+        /// Returns whether the pixel component is in the allowed range (i.e. in the interval [<value>0</value>,
+        /// <see cref="HighestComponentValue"/>].
+        /// </summary>
+        /// <returns><c>true</c> if the pixel component is in range; otherwise, <c>false</c>.</returns>
+        /// <param name="component">The pixel component to test.</param>
+        protected abstract bool IsPixelComponentInRange(TPixelComponent component);
+
+        /// <summary>
         /// Initializes a new Netpbm image.
         /// </summary>
         /// <param name="width">Width of the image.</param>
@@ -115,6 +157,15 @@ namespace RavuAlHemio.PbmNet
         protected NetpbmImage(int width, int height, TPixelComponent highestComponentValue,
 			IEnumerable<Component> components, IEnumerable<IEnumerable<TPixelComponent>> pixelData)
         {
+            if (width < 1)
+            {
+                throw new ArgumentOutOfRangeException("width", width, "width must be at least 1");
+            }
+            if (height < 1)
+            {
+                throw new ArgumentOutOfRangeException("height", height, "height must be at least 1");
+            }
+
             Width = width;
             Height = height;
             HighestComponentValue = highestComponentValue;
@@ -131,6 +182,15 @@ namespace RavuAlHemio.PbmNet
                             Rows.Count, Width * Components.Count, Width, Components.Count, rowPixels.Count));
 				}
 
+                var badPixel = rowPixels.FindIndex(c => !IsPixelComponentInRange(c));
+                if (badPixel != -1)
+                {
+                    throw new ArgumentOutOfRangeException("pixelData",
+                        string.Format("row {0} pixel {1} component {2} must have a value between 0 and {3} (has {4})",
+                            Rows.Count, badPixel / Components.Count, badPixel % Components.Count, HighestComponentValue,
+                            rowPixels[badPixel]));
+                }
+
                 Rows.Add(rowPixels);
                 if (Rows.Count > Height)
                 {
@@ -143,6 +203,17 @@ namespace RavuAlHemio.PbmNet
                 throw new ArgumentOutOfRangeException("pixelData",
                         string.Format("image has {0} rows, must have {1}", Rows.Count, height));
             }
+        }
+
+        [ContractInvariantMethod]
+        protected void ObjectInvariant()
+        {
+            Contract.Invariant(Width > 0);
+            Contract.Invariant(Height > 0);
+            Contract.Invariant(BytesPerPixelComponent > 0);
+            Contract.Invariant(Rows.Count == Height);
+            Contract.Invariant(Rows.All(row => row.Count == Width * Components.Count));
+            Contract.Invariant(Rows.All(row => row.All(IsPixelComponentInRange)));
         }
     }
 }

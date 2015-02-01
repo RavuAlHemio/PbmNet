@@ -14,6 +14,11 @@ namespace RavuAlHemio.PbmNet
         {
         }
 
+        protected override bool IsPixelComponentInRange(byte component)
+        {
+            return component >= 0 && component <= HighestComponentValue;
+        }
+
         public override int BytesPerPixelComponent
         {
             get { return 1; }
@@ -22,6 +27,29 @@ namespace RavuAlHemio.PbmNet
         public override double ScalePixelComponent(byte pixelComponent)
         {
             return pixelComponent / (double)HighestComponentValue;
+        }
+
+        public override bool IsBitmap
+        {
+            get
+            {
+                return HighestComponentValue == 1;
+            }
+        }
+
+        internal override IEnumerable<byte> ComponentToBigEndianBytes(byte pixelComponent)
+        {
+            yield return pixelComponent;
+        }
+
+        internal override byte InvertPixelValue(byte pixelComponent)
+        {
+            return (byte)(HighestComponentValue - pixelComponent);
+        }
+
+        internal override bool IsComponentValueZero(byte componentValue)
+        {
+            return (componentValue == 0);
         }
     }
 }

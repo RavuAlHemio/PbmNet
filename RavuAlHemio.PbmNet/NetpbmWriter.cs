@@ -20,10 +20,8 @@ namespace RavuAlHemio.PbmNet
         /// <typeparam name="TPixelComponent">The pixel component type of the image.</typeparam>
         public ISet<ImageType> SupportedTypesForImage<TPixelComponent>(NetpbmImage<TPixelComponent> img)
         {
-            var types = new HashSet<ImageType>();
-
             // big PAM is always supported
-            types.Add(ImageType.BigPAM);
+            var types = new HashSet<ImageType> {ImageType.BigPAM};
 
             if (img.BytesPerPixelComponent > 2)
             {
@@ -34,38 +32,37 @@ namespace RavuAlHemio.PbmNet
             // PAM supports any component types
             types.Add(ImageType.PAM);
 
-            var componentSet = new HashSet<Component>(img.Components);
-
             // PPM requires RGB
             if (
                 img.Components.Count == 3 &&
-                componentSet.Contains(Component.Red) &&
-                componentSet.Contains(Component.Green) &&
-                componentSet.Contains(Component.Blue)
+                img.Components[0] == Component.Red &&
+                img.Components[1] == Component.Green &&
+                img.Components[2] == Component.Blue
             )
             {
                 types.Add(ImageType.PPM);
                 types.Add(ImageType.PlainPPM);
             }
 
-            // PGM requires grayscale
+            // PGM requires grayscale (black-to-white)
             if (
                 img.Components.Count == 1 &&
-                (
-                    componentSet.Contains(Component.White) ||
-                    componentSet.Contains(Component.Black)
-                )
+                img.Components[0] == Component.White
             )
             {
                 types.Add(ImageType.PGM);
                 types.Add(ImageType.PlainPGM);
+            }
 
-                // PBM requires a bitmap
-                if (img.IsBitmap)
-                {
-                    types.Add(ImageType.PBM);
-                    types.Add(ImageType.PlainPBM);
-                }
+            // PBM requires a bitmap (white-to-black)
+            if (
+                img.IsBitmap &&
+                img.Components.Count == 1 &&
+                img.Components[0] == Component.Black
+            )
+            {
+                types.Add(ImageType.PBM);
+                types.Add(ImageType.PlainPBM);
             }
 
             return types;
@@ -218,7 +215,6 @@ namespace RavuAlHemio.PbmNet
                 // output the magic
                 writer.Write(string.Format("P{0}\n", magicNumber));
 
-                int[] componentPermutation;
                 if (type == ImageType.PAM || type == ImageType.BigPAM)
                 {
                     // output width line
@@ -240,13 +236,6 @@ namespace RavuAlHemio.PbmNet
                 }
                 else
                 {
-                    // identity component permutation
-                    componentPermutation = new int[image.Components.Count];
-                    for (int i = 0; i < image.Components.Count; ++i)
-                    {
-                        componentPermutation[i] = i;
-                    }
-
                     // output width and height
                     writer.Write(string.Format("{0} {1}\n", image.Width, image.Height));
 

@@ -33,7 +33,7 @@ namespace RavuAlHemio.PbmNet
 
         /// <summary>
         /// The actual rows of the image; drill down from rows to pixels. Each pixel is represented as a sequence of
-		/// components within the row; therefore, each row has <see cref="Width"/> times <see cref="Components.Count"/>
+		/// components within the row; therefore, each row has <see cref="Width"/> times <see cref="Components"/>.Count
 		/// elements.
         /// </summary>
         protected IList<IList<TPixelComponent>> Rows { get; set; }
@@ -113,7 +113,7 @@ namespace RavuAlHemio.PbmNet
         /// <returns>A list of pixel values within the interval [<value>0.0</value>, <value>1.0</value>].</returns>
         public IList<double> GetScaledPixel(int x, int y)
         {
-            var retArray = GetNativePixel(x, y).Select(p => ScalePixelComponent(p)).ToArray();
+            var retArray = GetNativePixel(x, y).Select(ScalePixelComponent).ToArray();
             var ret = new ReadOnlyCollection<double>(retArray);
             Contract.Ensures(ret.Count == Components.Count);
             Contract.Ensures(ret.All(component => component >= 0.0 && component <= 1.0));
@@ -137,12 +137,41 @@ namespace RavuAlHemio.PbmNet
         }
 
         /// <summary>
+        /// Obtains a list of rows, with their pixel values as a contiguous list of component values for each pixel in
+        /// pixel-major order, e.g. <c>RGBRGBRGB</c>.
+        /// </summary>
+        /// <value>The list of rows.</value>
+        public IList<IList<TPixelComponent>> NativeRows
+        {
+            get
+            {
+                var retRows = Rows.Select(r => (IList<TPixelComponent>)new ReadOnlyCollection<TPixelComponent>(r)).ToList();
+                return new ReadOnlyCollection<IList<TPixelComponent>>(retRows);
+            }
+        }
+
+        /// <summary>
         /// Returns whether the pixel component is in the allowed range (i.e. in the interval [<value>0</value>,
         /// <see cref="HighestComponentValue"/>].
         /// </summary>
         /// <returns><c>true</c> if the pixel component is in range; otherwise, <c>false</c>.</returns>
         /// <param name="component">The pixel component to test.</param>
         protected abstract bool IsPixelComponentInRange(TPixelComponent component);
+
+        /// <summary>
+        /// Creates and returns a new image of the same type as this image.
+        /// </summary>
+        /// <param name="width">Width of the image.</param>
+        /// <param name="height">Height of the image.</param>
+        /// <param name="highestComponentValue">The highest value a pixel component may have.</param>
+        /// <param name="components">The components of the image.</param>
+        /// <param name="pixelData">The actual pixel data of the image. Drill down rows to pixels, with the pixels
+        /// represented as a contiguous sequence of component values for each pixel (in pixel-major order, e.g.
+        /// <c>RGBRGBRGB</c>.</param>
+        /// <returns>The new image.</returns>
+        public abstract NetpbmImage<TPixelComponent> NewImageOfSameType(int width, int height,
+            TPixelComponent highestComponentValue, IEnumerable<Component> components,
+            IEnumerable<IEnumerable<TPixelComponent>> pixelData);
 
         /// <summary>
         /// Initializes a new Netpbm image.

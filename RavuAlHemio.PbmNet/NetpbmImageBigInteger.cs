@@ -72,5 +72,11 @@ namespace RavuAlHemio.PbmNet
         {
             return componentValue.IsZero;
         }
+
+        public override NetpbmImage<BigInteger> NewImageOfSameType(int width, int height, BigInteger highestComponentValue, IEnumerable<Component> components,
+            IEnumerable<IEnumerable<BigInteger>> pixelData)
+        {
+            return new NetpbmImageBigInteger(width, height, highestComponentValue, components, pixelData);
+        }
     }
 }

@@ -15,7 +15,7 @@ namespace RavuAlHemio.PbmNet
 
         protected override bool IsPixelComponentInRange(ushort component)
         {
-            return component >= 0 && component <= HighestComponentValue;
+            return component <= HighestComponentValue;
         }
 
         public override int BytesPerPixelComponent
@@ -50,6 +50,12 @@ namespace RavuAlHemio.PbmNet
         internal override bool IsComponentValueZero(ushort componentValue)
         {
             return (componentValue == 0);
+        }
+
+        public override NetpbmImage<ushort> NewImageOfSameType(int width, int height, ushort highestComponentValue, IEnumerable<Component> components,
+            IEnumerable<IEnumerable<ushort>> pixelData)
+        {
+            return new NetpbmImage16(width, height, highestComponentValue, components, pixelData);
         }
     }
 }

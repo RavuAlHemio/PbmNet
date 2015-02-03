@@ -257,7 +257,7 @@ namespace RavuAlHemio.PbmNet
 
                     for (int r = 0; r < image.Height; ++r)
                     {
-                        foreach (var value in image.GetNativeRow(r))
+                        foreach (var value in image.NativeRows[r])
                         {
                             writer.Write(value.ToString());
                             writer.Write(' ');
@@ -271,7 +271,7 @@ namespace RavuAlHemio.PbmNet
                     var values = new List<TPixelComponent>(8);
                     for (int r = 0; r < image.Height; ++r)
                     {
-                        foreach (var value in image.GetNativeRow(r))
+                        foreach (var value in image.NativeRows[r])
                         {
                             values.Add(value);
 
@@ -295,7 +295,7 @@ namespace RavuAlHemio.PbmNet
                     // just the big endian bytes
                     for (int r = 0; r < image.Height; ++r)
                     {
-                        foreach (var value in image.GetNativeRow(r))
+                        foreach (var value in image.NativeRows[r])
                         {
                             writer.Write(image.ComponentToBigEndianBytes(value).ToArray());
                         }

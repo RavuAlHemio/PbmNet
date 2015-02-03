@@ -51,7 +51,7 @@ namespace RavuAlHemio.PbmNet
             var rows = new List<TPixelComponent>[image.Height];
             for (int y = 0; y < image.Height; ++y)
             {
-                var originalRow = image.GetNativeRow(y);
+                var originalRow = image.NativeRows[y];
                 var newRow = new List<TPixelComponent>(image.Width * image.Components.Count);
 
                 for (int x = 0; x < image.Width; ++x)
@@ -59,7 +59,7 @@ namespace RavuAlHemio.PbmNet
                     var newChunk = new TPixelComponent[image.Components.Count];
                     for (int c = 0; c < image.Components.Count; ++c)
                     {
-                        newChunk[c] = originalRow[x*image.Components.Count + c];
+                        newChunk[c] = originalRow[x*image.Components.Count + newToOldOrder[c]];
                     }
                     newRow.AddRange(newChunk);
                 }
@@ -155,7 +155,7 @@ namespace RavuAlHemio.PbmNet
 
             for (int y = 0; y < image.Height; ++y)
             {
-                var oldRow = image.GetNativeRow(y);
+                var oldRow = image.NativeRows[y];
                 var newRow = new List<TPixelComponent>(image.Width*image.Components.Count);
                 for (int x = 0; x < image.Width; ++x)
                 {
@@ -201,57 +201,57 @@ namespace RavuAlHemio.PbmNet
 
             // canonicalize order
             if (
-                image.Components.Count == 3 &&
-                image.Components.Contains(Component.Red) &&
-                image.Components.Contains(Component.Green) &&
-                image.Components.Contains(Component.Blue)
+                ret.Components.Count == 3 &&
+                ret.Components.Contains(Component.Red) &&
+                ret.Components.Contains(Component.Green) &&
+                ret.Components.Contains(Component.Blue)
             )
             {
                 ret = CorrectOrderRGB(ret);
             }
             else if (
-                image.Components.Count == 4 &&
-                image.Components.Contains(Component.Red) &&
-                image.Components.Contains(Component.Green) &&
-                image.Components.Contains(Component.Blue) &&
-                image.Components.Contains(Component.Alpha)
+                ret.Components.Count == 4 &&
+                ret.Components.Contains(Component.Red) &&
+                ret.Components.Contains(Component.Green) &&
+                ret.Components.Contains(Component.Blue) &&
+                ret.Components.Contains(Component.Alpha)
             )
             {
                 ret = CorrectOrderRGBA(ret);
             }
             else if (
-                image.Components.Count == 2 &&
-                image.Components.Contains(Component.White) &&
-                image.Components.Contains(Component.Alpha)
+                ret.Components.Count == 2 &&
+                ret.Components.Contains(Component.White) &&
+                ret.Components.Contains(Component.Alpha)
             )
             {
                 ret = CorrectOrderWA(ret);
             }
             else if (
-                image.Components.Count == 2 &&
-                image.Components.Contains(Component.Black) &&
-                image.Components.Contains(Component.Alpha)
+                ret.Components.Count == 2 &&
+                ret.Components.Contains(Component.Black) &&
+                ret.Components.Contains(Component.Alpha)
             )
             {
                 ret = CorrectOrderBA(ret);
             }
             else if (
-                image.Components.Count == 4 &&
-                image.Components.Contains(Component.Cyan) &&
-                image.Components.Contains(Component.Magenta) &&
-                image.Components.Contains(Component.Yellow) &&
-                image.Components.Contains(Component.Black)
+                ret.Components.Count == 4 &&
+                ret.Components.Contains(Component.Cyan) &&
+                ret.Components.Contains(Component.Magenta) &&
+                ret.Components.Contains(Component.Yellow) &&
+                ret.Components.Contains(Component.Black)
             )
             {
                 ret = CorrectOrderCMYK(ret);
             }
             else if (
-                image.Components.Count == 5 &&
-                image.Components.Contains(Component.Cyan) &&
-                image.Components.Contains(Component.Magenta) &&
-                image.Components.Contains(Component.Yellow) &&
-                image.Components.Contains(Component.Black) &&
-                image.Components.Contains(Component.Alpha)
+                ret.Components.Count == 5 &&
+                ret.Components.Contains(Component.Cyan) &&
+                ret.Components.Contains(Component.Magenta) &&
+                ret.Components.Contains(Component.Yellow) &&
+                ret.Components.Contains(Component.Black) &&
+                ret.Components.Contains(Component.Alpha)
             )
             {
                 ret = CorrectOrderCMYKA(ret);

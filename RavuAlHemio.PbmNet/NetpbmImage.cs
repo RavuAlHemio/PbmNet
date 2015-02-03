@@ -121,22 +121,6 @@ namespace RavuAlHemio.PbmNet
         }
 
         /// <summary>
-        /// Obtains the pixel values in the given row, as a contiguous list of component values for each pixel (in
-        /// pixel-major order, e.g. <c>RGBRGBRGB</c>).
-        /// </summary>
-        /// <returns>The list of pixels' component values within the given row.</returns>
-        /// <param name="y">The zero-based coordinate of the row whose pixels to return.</param>
-        public IList<TPixelComponent> GetNativeRow(int y)
-        {
-            if (y < 0 || y >= Height)
-            {
-                throw new ArgumentOutOfRangeException("y", y,
-                    string.Format("y ({0}) must be at least 0 and less than the height of the image ({1})", y, Height));
-            }
-            return new ReadOnlyCollection<TPixelComponent>(Rows[y]);
-        }
-
-        /// <summary>
         /// Obtains a list of rows, with their pixel values as a contiguous list of component values for each pixel in
         /// pixel-major order, e.g. <c>RGBRGBRGB</c>.
         /// </summary>

@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Management.Instrumentation;
+﻿using System.Collections.Generic;
 using RavuAlHemio.PbmNet;
 using Xunit;
 

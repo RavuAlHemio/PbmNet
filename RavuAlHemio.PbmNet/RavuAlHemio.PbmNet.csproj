@@ -39,6 +39,7 @@
   <ItemGroup>
     <Compile Include="Component.cs" />
     <Compile Include="GrayscaleConversion.cs" />
+    <Compile Include="NetpbmReader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NetpbmImage.cs" />
     <Compile Include="NetpbmImage16.cs" />

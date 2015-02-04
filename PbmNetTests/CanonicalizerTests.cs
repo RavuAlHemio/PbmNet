@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using RavuAlHemio.PbmNet;
 using Xunit;
+// ReSharper disable RedundantCast
 
 namespace PbmNetTests
 {

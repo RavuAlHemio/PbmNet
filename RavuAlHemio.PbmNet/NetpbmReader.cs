@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace RavuAlHemio.PbmNet
 {
@@ -380,37 +379,22 @@ namespace RavuAlHemio.PbmNet
 
             var maxValue = imageFactory.ParseHighestComponentValue(maxValueString);
 
-            Component[] components;
-            if (depth.Value == 1 && (tupleType == "BLACKANDWHITE" || tupleType == "GRAYSCALE"))
+            var components = KnownTupleTypes.DecodeComponentString(tupleType).ToList();
+            if (components.Count != depth.Value)
             {
-                // note: doesn't check if a BLACKANDWHITE image is really only two-valued
-                components = new[] {Component.White};
-            }
-            else if (depth.Value == 2 && (tupleType == "BLACKANDWHITE_ALPHA" || tupleType == "GRAYSCALE_ALPHA"))
-            {
-                // note: doesn't check if a BLACKANDWHITE image is really only two-valued
-                components = new[] { Component.White, Component.Alpha };
-            }
-            else if (depth.Value == 3 && tupleType == "RGB")
-            {
-                components = new[] {Component.Red, Component.Green, Component.Blue};
-            }
-            else if (depth.Value == 4)
-            {
-                if (tupleType == "RGB_ALPHA")
-                {
-                    components = new[] {Component.Red, Component.Green, Component.Blue, Component.Alpha};
-                }
-                else if (tupleType == "CMYK")
-                {
-                    components = new[] {Component.Cyan, Component.Magenta, Component.Yellow, Component.Black};
-                }
+                throw new InvalidDataException("component count doesn't match depth");
             }
 
             // final newline has been discarded by ReadUntilAndDiscardNewline
 
-            // TODO
-            throw new NotImplementedException();
+            // read the data!
+            var rows = new List<IEnumerable<TPixelFormat>>();
+            for (int r = 0; r < height.Value; ++r)
+            {
+                rows.Add(imageFactory.ReadRow(stream, width.Value, depth.Value, maxValue));
+            }
+
+            return imageFactory.MakeImage(width.Value, height.Value, maxValue, components, rows);
         }
 
         private NetpbmImage<TPixelFormat> ReadPBM<TPixelFormat>(Stream stream, ValueEncoding valueEncoding, IImageFactory<TPixelFormat> imageFactory)
@@ -477,7 +461,7 @@ namespace RavuAlHemio.PbmNet
             }
 
             var highestValueBytes = SkipWhitespaceAndReadUntilNextWhitespaceByte(stream, true);
-            var highestValueString = GetUsAsciiString(heightBytes);
+            var highestValueString = GetUsAsciiString(highestValueBytes);
             TPixelFormat highestValue = imageFactory.ParseHighestComponentValue(highestValueString);
 
             // final byte of whitespace has been discarded by SkipWhitespaceAndReadUntilNextWhitespaceByte
@@ -527,27 +511,27 @@ namespace RavuAlHemio.PbmNet
             }
             else if (magic[1] == '2')
             {
-                return ReadPGMOrPPM<TPixelFormat>(stream, ValueEncoding.Plain, imageFactory, Component.White);
+                return ReadPGMOrPPM(stream, ValueEncoding.Plain, imageFactory, Component.White);
             }
             else if (magic[1] == '3')
             {
-                return ReadPGMOrPPM<TPixelFormat>(stream, ValueEncoding.Plain, imageFactory, Component.Red, Component.Green, Component.Blue);
+                return ReadPGMOrPPM(stream, ValueEncoding.Plain, imageFactory, Component.Red, Component.Green, Component.Blue);
             }
             else if (magic[1] == '4')
             {
-                return ReadPBM<TPixelFormat>(stream, ValueEncoding.Binary, imageFactory);
+                return ReadPBM(stream, ValueEncoding.Binary, imageFactory);
             }
             else if (magic[1] == '5')
             {
-                return ReadPGMOrPPM<TPixelFormat>(stream, ValueEncoding.Binary, imageFactory, Component.White);
+                return ReadPGMOrPPM(stream, ValueEncoding.Binary, imageFactory, Component.White);
             }
             else if (magic[1] == '6')
             {
-                return ReadPGMOrPPM<TPixelFormat>(stream, ValueEncoding.Binary, imageFactory, Component.Red, Component.Green, Component.Blue);
+                return ReadPGMOrPPM(stream, ValueEncoding.Binary, imageFactory, Component.Red, Component.Green, Component.Blue);
             }
             else if (magic[1] == '7')
             {
-                return ReadPAM<TPixelFormat>(stream, imageFactory);
+                return ReadPAM(stream, imageFactory);
             }
             else
             {

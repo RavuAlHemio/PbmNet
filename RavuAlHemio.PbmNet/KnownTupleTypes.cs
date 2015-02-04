@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace RavuAlHemio.PbmNet
 {
@@ -51,8 +51,45 @@ namespace RavuAlHemio.PbmNet
                 return KnownTypes[componentString];
             }
 
-            // TODO
-            throw new NotImplementedException();
+            var pieces = componentString.Split('_');
+            return pieces.Select(piece => KnownColors.ContainsKey(piece) ? KnownColors[piece] : Component.Unknown);
+        }
+
+        public static string EncodeComponentString(IEnumerable<Component> components)
+        {
+            var componentList = new List<Component>(components);
+
+            // look into known types
+            foreach (var knownType in KnownTypes)
+            {
+                if (knownType.Value.SequenceEqual(componentList))
+                {
+                    return knownType.Key;
+                }
+            }
+
+            // no known type? collect the colors
+            var retList = new List<string>();
+            foreach (var component in componentList)
+            {
+                bool foundThisColor = false;
+                foreach (var color in KnownColors)
+                {
+                    if (color.Value == component)
+                    {
+                        retList.Add(color.Key);
+                        foundThisColor = true;
+                        break;
+                    }
+                }
+
+                if (!foundThisColor)
+                {
+                    retList.Add("UNKNOWN");
+                }
+            }
+
+            return string.Join("_", retList);
         }
     }
 }

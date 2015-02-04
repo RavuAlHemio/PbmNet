@@ -39,7 +39,9 @@
   <ItemGroup>
     <Compile Include="Component.cs" />
     <Compile Include="GrayscaleConversion.cs" />
+    <Compile Include="KnownTupleTypes.cs" />
     <Compile Include="NetpbmReader.cs" />
+    <Compile Include="NetpbmUtil.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="NetpbmImage.cs" />
     <Compile Include="NetpbmImage16.cs" />
@@ -49,8 +51,8 @@
     <Compile Include="ImageType.cs" />
     <Compile Include="NetpbmWriter.cs" />
     <Compile Include="Canonicalizer.cs" />
-    <Compile Include="PixelComponentReaders.cs" />
-    <Compile Include="IPixelComponentReader.cs" />
+    <Compile Include="ImageFactories.cs" />
+    <Compile Include="IImageFactory.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -21,8 +21,11 @@
         Red = 2,
 
         /// <summary>
-        /// The green component in an RGB image. The lowest value is "no green", the highest is "full green".
+        /// The green component in an RGB. The lowest value is "no green", the highest is "full green".
         /// </summary>
+        /// <remarks>
+        /// This is the additive variant of green. The subtractive variant is <see cref="SubtractiveGreen"/>.
+        /// </remarks>
         Green = 3,
 
         /// <summary>
@@ -56,6 +59,31 @@
         /// The alpha component in an image with transparency. The lowest value is "completely transparent", the highest
         /// is "fully opaque".
         /// </summary>
-        Alpha = 9
+        Alpha = 9,
+
+        /// <summary>
+        /// The orange component in a CMYKOG image. The lowest value is "no orange", the highest is "full orange".
+        /// </summary>
+        Orange = 10,
+
+        /// <summary>
+        /// The green component in a CMYKOG image. The lowest value is "no green", the highest is "full green".
+        /// </summary>
+        /// <remarks>
+        /// The more common additive variant of green is <see cref="Green"/>.
+        /// </remarks>
+        SubtractiveGreen = 11,
+
+        /// <summary>
+        /// The light cyan component in a CcMmYK image. The lowest value is "no light cyan", the highest is "full light
+        /// cyan".
+        /// </summary>
+        LightCyan = 12,
+
+        /// <summary>
+        /// The light magenta component in a CcMmYK image. The lowest value is "no light magenta", the highest is "full
+        /// light magenta".
+        /// </summary>
+        LightMagenta = 13
     }
 }

@@ -6,58 +6,67 @@ using System.Numerics;
 
 namespace RavuAlHemio.PbmNet
 {
-    public static class PixelComponentReaders
+    public static class ImageFactories
     {
-        /// <summary>
-        /// Reads from a stream until end-of-file or the buffer is filled, and returns whether the buffer was filled.
-        /// </summary>
-        /// <returns><c>true</c> if the buffer was filled; <c>false</c> if end-of-file was encountered.</returns>
-        /// <param name="stream">The stream from which to read.</param>
-        /// <param name="buffer">The buffer to fill.</param>
-        private static bool ReadToFillBuffer(Stream stream, byte[] buffer)
+        public class Image8Factory : IImageFactory<byte>
         {
-            int offset = 0;
-            for (;;)
+            public byte ParseComponentValue(string componentValueString)
             {
-                int remainingBytes = buffer.Length - offset;
-                if (remainingBytes == 0)
-                {
-                    return true;
-                }
-                var readBytes = stream.Read(buffer, offset, remainingBytes);
-                if (readBytes == 0)
-                {
-                    // EOF
-                    return false;
-                }
-                offset += readBytes;
+                return byte.Parse(componentValueString, NumberStyles.None, CultureInfo.InvariantCulture);
             }
-        }
 
-        public class UInt8Reader : IPixelComponentReader<byte>
-        {
             public byte ParseHighestComponentValue(string highestComponentValueString)
             {
-                return byte.Parse(highestComponentValueString, NumberStyles.None, CultureInfo.InvariantCulture);
+                return ParseComponentValue(highestComponentValueString);
+            }
+
+            public byte BitmapOnPixelComponentValue
+            {
+                get { return 1; }
+            }
+
+            public byte ZeroPixelComponentValue
+            {
+                get { return 0; }
             }
 
             public IEnumerable<byte> ReadRow(Stream stream, int width, int componentCount, byte highestComponentValue)
             {
                 var readCount = width * componentCount;
                 var ret = new byte[readCount];
-                if (!ReadToFillBuffer(stream, ret))
+                if (!NetpbmUtil.ReadToFillBuffer(stream, ret))
                 {
                     throw new EndOfStreamException();
                 }
                 return ret;
             }
+
+            public NetpbmImage<byte> MakeImage(int width, int height, byte highestComponentValue, IEnumerable<Component> components, IEnumerable<IEnumerable<byte>> pixelData)
+            {
+                return new NetpbmImage8(width, height, highestComponentValue, components, pixelData);
+            }
         }
 
-        public class UInt16Reader : IPixelComponentReader<ushort>
+        public class Image16Factory : IImageFactory<ushort>
         {
+            public ushort ParseComponentValue(string componentValueString)
+            {
+                return ushort.Parse(componentValueString, NumberStyles.None, CultureInfo.InvariantCulture);
+            }
+
             public ushort ParseHighestComponentValue(string highestComponentValueString)
             {
-                return ushort.Parse(highestComponentValueString, NumberStyles.None, CultureInfo.InvariantCulture);
+                return ParseComponentValue(highestComponentValueString);
+            }
+
+            public ushort BitmapOnPixelComponentValue
+            {
+                get { return 1; }
+            }
+
+            public ushort ZeroPixelComponentValue
+            {
+                get { return 0; }
             }
 
             public IEnumerable<ushort> ReadRow(Stream stream, int width, int componentCount, ushort highestComponentValue)
@@ -67,7 +76,7 @@ namespace RavuAlHemio.PbmNet
                 var buf = new byte[2];
                 for (int i = 0; i < readCount; ++i)
                 {
-                    if (!ReadToFillBuffer(stream, buf))
+                    if (!NetpbmUtil.ReadToFillBuffer(stream, buf))
                     {
                         throw new EndOfStreamException();
                     }
@@ -81,13 +90,33 @@ namespace RavuAlHemio.PbmNet
                 }
                 return ret;
             }
+
+            public NetpbmImage<ushort> MakeImage(int width, int height, ushort highestComponentValue, IEnumerable<Component> components, IEnumerable<IEnumerable<ushort>> pixelData)
+            {
+                return new NetpbmImage16(width, height, highestComponentValue, components, pixelData);
+            }
         }
 
-        public class UInt32Reader : IPixelComponentReader<uint>
+        public class Image32Factory : IImageFactory<uint>
         {
+            public uint ParseComponentValue(string componentValueString)
+            {
+                return uint.Parse(componentValueString, NumberStyles.None, CultureInfo.InvariantCulture);
+            }
+
             public uint ParseHighestComponentValue(string highestComponentValueString)
             {
-                return uint.Parse(highestComponentValueString, NumberStyles.None, CultureInfo.InvariantCulture);
+                return ParseComponentValue(highestComponentValueString);
+            }
+
+            public uint BitmapOnPixelComponentValue
+            {
+                get { return 1; }
+            }
+
+            public uint ZeroPixelComponentValue
+            {
+                get { return 0; }
             }
 
             public IEnumerable<uint> ReadRow(Stream stream, int width, int componentCount, uint highestComponentValue)
@@ -97,7 +126,7 @@ namespace RavuAlHemio.PbmNet
                 var buf = new byte[4];
                 for (int i = 0; i < readCount; ++i)
                 {
-                    if (!ReadToFillBuffer(stream, buf))
+                    if (!NetpbmUtil.ReadToFillBuffer(stream, buf))
                     {
                         throw new EndOfStreamException();
                     }
@@ -113,13 +142,33 @@ namespace RavuAlHemio.PbmNet
                 }
                 return ret;
             }
+
+            public NetpbmImage<uint> MakeImage(int width, int height, uint highestComponentValue, IEnumerable<Component> components, IEnumerable<IEnumerable<uint>> pixelData)
+            {
+                return new NetpbmImage32(width, height, highestComponentValue, components, pixelData);
+            }
         }
 
-        public class BigIntegerReader : IPixelComponentReader<BigInteger>
+        public class ImageBigIntegerFactory : IImageFactory<BigInteger>
         {
+            public BigInteger ParseComponentValue(string componentValueString)
+            {
+                return BigInteger.Parse(componentValueString, NumberStyles.None, CultureInfo.InvariantCulture);
+            }
+
             public BigInteger ParseHighestComponentValue(string highestComponentValueString)
             {
-                return BigInteger.Parse(highestComponentValueString, NumberStyles.None, CultureInfo.InvariantCulture);
+                return ParseComponentValue(highestComponentValueString);
+            }
+
+            public BigInteger BitmapOnPixelComponentValue
+            {
+                get { return BigInteger.One; }
+            }
+
+            public BigInteger ZeroPixelComponentValue
+            {
+                get { return BigInteger.Zero; }
             }
 
             public IEnumerable<BigInteger> ReadRow(Stream stream, int width, int componentCount, BigInteger highestComponentValue)
@@ -139,7 +188,7 @@ namespace RavuAlHemio.PbmNet
                 var buf = new byte[bytesPerValue];
                 for (int i = 0; i < readCount; ++i)
                 {
-                    if (!ReadToFillBuffer(stream, buf))
+                    if (!NetpbmUtil.ReadToFillBuffer(stream, buf))
                     {
                         throw new EndOfStreamException();
                     }
@@ -162,6 +211,12 @@ namespace RavuAlHemio.PbmNet
                     }
                 }
                 return ret;
+            }
+
+            public NetpbmImage<BigInteger> MakeImage(int width, int height, BigInteger highestComponentValue, IEnumerable<Component> components,
+                IEnumerable<IEnumerable<BigInteger>> pixelData)
+            {
+                return new NetpbmImageBigInteger(width, height, highestComponentValue, components, pixelData);
             }
         }
     }

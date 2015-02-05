@@ -45,9 +45,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BinaryPPMReadTests.cs" />
     <Compile Include="CanonicalizerTests.cs" />
     <Compile Include="ModelTests.cs" />
+    <Compile Include="BinaryPBMReadTests.cs" />
+    <Compile Include="BinaryPGMReadTests.cs" />
+    <Compile Include="PAMReadTests.cs" />
+    <Compile Include="PlainPPMReadTests.cs" />
+    <Compile Include="PlainPGMReadTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PlainPBMReadTests.cs" />
+    <Compile Include="ReaderWriterRoundtripTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RavuAlHemio.PbmNet\RavuAlHemio.PbmNet.csproj">

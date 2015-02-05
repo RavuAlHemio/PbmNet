@@ -59,6 +59,7 @@ namespace RavuAlHemio.PbmNet
         /// <param name="components">The components making up this image.</param>
         /// <param name="pixelData">The pixel data rows.</param>
         /// <returns>The new image.</returns>
+        /// <exception cref="InvalidDataException">Thrown if the data passed to this method is invalid.</exception>
         NetpbmImage<TPixelComponent> MakeImage(int width, int height, TPixelComponent highestComponentValue,
             IEnumerable<Component> components, IEnumerable<IEnumerable<TPixelComponent>> pixelData);
     }

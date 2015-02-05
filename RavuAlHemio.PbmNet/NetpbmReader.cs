@@ -224,12 +224,12 @@ namespace RavuAlHemio.PbmNet
             }
         }
 
-        private IEnumerable<TPixelFormat> ReadPlainRow<TPixelFormat>(Stream stream, int componentCount,
+        private IEnumerable<TPixelFormat> ReadPlainRow<TPixelFormat>(Stream stream, int componentCount, bool finalRow,
             IImageFactory<TPixelFormat> imageFactory)
         {
             for (int i = 0; i < componentCount; ++i)
             {
-                var valueBytes = SkipWhitespaceAndReadUntilNextWhitespaceByte(stream, true);
+                var valueBytes = SkipWhitespaceAndReadUntilNextWhitespaceByte(stream, !finalRow || i < componentCount-1);
                 var valueString = GetUsAsciiString(valueBytes);
                 yield return imageFactory.ParseComponentValue(valueString);
             }
@@ -430,7 +430,7 @@ namespace RavuAlHemio.PbmNet
             {
                 for (int r = 0; r < height; ++r)
                 {
-                    rows.Add(ReadPlainRow(stream, width, imageFactory));
+                    rows.Add(ReadPlainRow(stream, width, r == height-1, imageFactory));
                 }
             }
             else
@@ -479,7 +479,7 @@ namespace RavuAlHemio.PbmNet
             {
                 for (int r = 0; r < height; ++r)
                 {
-                    rows.Add(ReadPlainRow(stream, width * components.Length, imageFactory));
+                    rows.Add(ReadPlainRow(stream, width * components.Length, r == height - 1, imageFactory));
                 }
             }
             else

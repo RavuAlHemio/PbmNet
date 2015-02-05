@@ -43,7 +43,22 @@ namespace RavuAlHemio.PbmNet
 
             public NetpbmImage<byte> MakeImage(int width, int height, byte highestComponentValue, IEnumerable<Component> components, IEnumerable<IEnumerable<byte>> pixelData)
             {
-                return new NetpbmImage8(width, height, highestComponentValue, components, pixelData);
+                Exception exception;
+
+                try
+                {
+                    return new NetpbmImage8(width, height, highestComponentValue, components, pixelData);
+                }
+                catch (ArgumentOutOfRangeException exc)
+                {
+                    exception = exc;
+                }
+                catch (OverflowException exc)
+                {
+                    exception = exc;
+                }
+
+                throw new InvalidDataException("invalid image format", exception);
             }
         }
 
@@ -93,7 +108,22 @@ namespace RavuAlHemio.PbmNet
 
             public NetpbmImage<ushort> MakeImage(int width, int height, ushort highestComponentValue, IEnumerable<Component> components, IEnumerable<IEnumerable<ushort>> pixelData)
             {
-                return new NetpbmImage16(width, height, highestComponentValue, components, pixelData);
+                Exception exception;
+
+                try
+                {
+                    return new NetpbmImage16(width, height, highestComponentValue, components, pixelData);
+                }
+                catch (ArgumentOutOfRangeException exc)
+                {
+                    exception = exc;
+                }
+                catch (OverflowException exc)
+                {
+                    exception = exc;
+                }
+
+                throw new InvalidDataException("invalid image format", exception);
             }
         }
 
@@ -145,7 +175,22 @@ namespace RavuAlHemio.PbmNet
 
             public NetpbmImage<uint> MakeImage(int width, int height, uint highestComponentValue, IEnumerable<Component> components, IEnumerable<IEnumerable<uint>> pixelData)
             {
-                return new NetpbmImage32(width, height, highestComponentValue, components, pixelData);
+                Exception exception;
+
+                try
+                {
+                    return new NetpbmImage32(width, height, highestComponentValue, components, pixelData);
+                }
+                catch (ArgumentOutOfRangeException exc)
+                {
+                    exception = exc;
+                }
+                catch (OverflowException exc)
+                {
+                    exception = exc;
+                }
+
+                throw new InvalidDataException("invalid image format", exception);
             }
         }
 
@@ -216,7 +261,22 @@ namespace RavuAlHemio.PbmNet
             public NetpbmImage<BigInteger> MakeImage(int width, int height, BigInteger highestComponentValue, IEnumerable<Component> components,
                 IEnumerable<IEnumerable<BigInteger>> pixelData)
             {
-                return new NetpbmImageBigInteger(width, height, highestComponentValue, components, pixelData);
+                Exception exception;
+
+                try
+                {
+                    return new NetpbmImageBigInteger(width, height, highestComponentValue, components, pixelData);
+                }
+                catch (ArgumentOutOfRangeException exc)
+                {
+                    exception = exc;
+                }
+                catch (OverflowException exc)
+                {
+                    exception = exc;
+                }
+
+                throw new InvalidDataException("invalid image format", exception);
             }
         }
     }

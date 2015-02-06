@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using RavuAlHemio.PbmNet;
 using Xunit;
 
@@ -10,9 +9,6 @@ namespace PbmNetTests
 {
     public class BinaryPPMReadTests
     {
-        private static readonly Encoding UsAsciiEncoding = Encoding.GetEncoding("us-ascii",
-            new EncoderExceptionFallback(), new DecoderExceptionFallback());
-
         [Fact]
         public void ValidTwoTimesTwo()
         {

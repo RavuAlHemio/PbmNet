@@ -189,7 +189,7 @@ namespace RavuAlHemio.PbmNet
                 throw new ArgumentOutOfRangeException("type", type, "the image cannot be encoded into this type");
             }
 
-            using (var writer = new BinaryWriter(stream, new UTF8Encoding(false, true)))
+            using (var writer = new NetpbmBinaryWriter(stream, new UTF8Encoding(false, true)))
             {
                 int magicNumber = (int)type;
                 bool isPlain = false;
@@ -213,37 +213,37 @@ namespace RavuAlHemio.PbmNet
                 }
 
                 // output the magic
-                writer.Write(string.Format("P{0}\n", magicNumber));
+                writer.WriteUnprefixed("P{0}\n", magicNumber);
 
                 if (type == ImageType.PAM || type == ImageType.BigPAM)
                 {
                     // output width line
-                    writer.Write(string.Format("WIDTH {0}\n", image.Width));
+                    writer.WriteUnprefixed("WIDTH {0}\n", image.Width);
 
                     // output height line
-                    writer.Write(string.Format("HEIGHT {0}\n", image.Width));
+                    writer.WriteUnprefixed("HEIGHT {0}\n", image.Width);
 
                     // output number of components
-                    writer.Write(string.Format("DEPTH {0}\n", image.Components.Count));
+                    writer.WriteUnprefixed("DEPTH {0}\n", image.Components.Count);
 
                     // maximum value
-                    writer.Write(string.Format("MAXVAL {0}\n", image.HighestComponentValue));
+                    writer.WriteUnprefixed("MAXVAL {0}\n", image.HighestComponentValue);
 
                     // find the components we are working with
-                    writer.Write(string.Format("TUPLTYPE {0}\n", GetPamTupleType(image)));
+                    writer.WriteUnprefixed("TUPLTYPE {0}\n", GetPamTupleType(image));
 
-                    writer.Write("ENDHDR\n");
+                    writer.WriteUnprefixed("ENDHDR\n");
                 }
                 else
                 {
                     // output width and height
-                    writer.Write(string.Format("{0} {1}\n", image.Width, image.Height));
+                    writer.WriteUnprefixed("{0} {1}\n", image.Width, image.Height);
 
                     // unless PBM (where the max value is always 1)
                     if (type != ImageType.PBM && type != ImageType.PlainPBM)
                     {
                         // output the max value
-                        writer.Write(string.Format("{0}\n", image.HighestComponentValue));
+                        writer.WriteUnprefixed("{0}\n", image.HighestComponentValue);
                     }
 
                     // the header's final newline
@@ -259,7 +259,7 @@ namespace RavuAlHemio.PbmNet
                     {
                         foreach (var value in image.NativeRows[r])
                         {
-                            writer.Write(value.ToString());
+                            writer.WriteUnprefixed(value.ToString());
                             writer.Write(' ');
                         }
                         writer.Write('\n');

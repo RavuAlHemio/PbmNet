@@ -51,6 +51,38 @@ namespace RavuAlHemio.PbmNet
         }
 
         /// <summary>
+        /// Skips a comment (discards everything until a carriage return or newline is encountered).
+        /// </summary>
+        /// <remarks>Call after encountering a hash (<value>'#'</value>) byte in <paramref name="stream"/>.</remarks>
+        /// <param name="throwOnEndOfFile">If <c>true</c>, throws <see cref="EndOfStreamException"/> if end-of-file is
+        /// encountered; otherwise, simply returns.</param>
+        /// <param name="stream">The stream from which to discard characters.</param>
+        /// <exception cref="EndOfStreamException">Thrown if <paramref name="stream"/> reaches end-of-file before a
+        /// line-end byte is encountered and <paramref name="throwOnEndOfFile"/> is <c>true</c>.</exception>
+        private static void SkipComment(Stream stream, bool throwOnEndOfFile)
+        {
+            for (;;)
+            {
+                int b = stream.ReadByte();
+                if (b == -1)
+                {
+                    if (throwOnEndOfFile)
+                    {
+                        throw new EndOfStreamException();
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else if (b == '\r' || b == '\n')
+                {
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns the bytes up to the first whitespace byte (as defined in <see cref="NetpbmWhiteSpaceBytes"/>) in
         /// the stream. Skips Netpbm comments (# until a newline)
         /// </summary>
@@ -82,22 +114,7 @@ namespace RavuAlHemio.PbmNet
                 else if (b == '#')
                 {
                     // comment
-                    while (b != '\r' && b != '\n')
-                    {
-                        b = stream.ReadByte();
-                        if (b == -1)
-                        {
-                            // comment before EOF
-                            if (throwOnEndOfFile)
-                            {
-                                throw new EndOfStreamException();
-                            }
-                            else
-                            {
-                                yield break;
-                            }
-                        }
-                    }
+                    SkipComment(stream, throwOnEndOfFile);
                 }
                 else if (NetpbmWhiteSpaceBytes.Contains(b))
                 {
@@ -107,7 +124,10 @@ namespace RavuAlHemio.PbmNet
                     }
                     yield break;
                 }
-                yield return (byte) b;
+                else
+                {
+                    yield return (byte)b;
+                }
             }
         }
 
@@ -124,17 +144,31 @@ namespace RavuAlHemio.PbmNet
         /// whitespace byte is encountered and <paramref name="throwOnEndOfFile"/> is <c>true</c>.</exception>
         private static IEnumerable<byte> SkipWhitespaceAndReadUntilNextWhitespaceByte(Stream stream, bool throwOnEndOfFile)
         {
-            // skip whitespace
-            int b = SkipWhitespaceAndReturnFirstNonWhitespaceByte(stream);
-            if (b == -1)
+            // skip whitespace and any comments
+            int b;
+            for (;;)
             {
-                if (throwOnEndOfFile)
+                b = SkipWhitespaceAndReturnFirstNonWhitespaceByte(stream);
+                if (b == -1)
                 {
-                    throw new EndOfStreamException();
+                    if (throwOnEndOfFile)
+                    {
+                        throw new EndOfStreamException();
+                    }
+                    else
+                    {
+                        yield break;
+                    }
+                }
+                else if (b == '#')
+                {
+                    // comment
+                    SkipComment(stream, throwOnEndOfFile);
                 }
                 else
                 {
-                    yield break;
+                    // found!
+                    break;
                 }
             }
 

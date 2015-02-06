@@ -10,9 +10,6 @@ namespace PbmNetTests
 {
     public class BinaryPGMReadTests
     {
-        private static readonly Encoding UsAsciiEncoding = Encoding.GetEncoding("us-ascii",
-            new EncoderExceptionFallback(), new DecoderExceptionFallback());
-
         [Fact]
         public void ValidTwoTimesTwo()
         {
@@ -26,6 +23,72 @@ namespace PbmNetTests
             };
             var bodyBytes = bodyRawBytes.Select(Convert.ToByte).ToArray();
 
+            var factory = new ImageFactories.Image8Factory();
+            var reader = new NetpbmReader();
+            NetpbmImage8 image;
+            using (var bodyStream = new MemoryStream(bodyBytes, false))
+            {
+                image = (NetpbmImage8)reader.ReadImage(bodyStream, factory);
+                Assert.Equal(-1, bodyStream.ReadByte());
+            }
+
+            Assert.Equal(2, image.Width);
+            Assert.Equal(2, image.Height);
+            Assert.Equal(1, image.HighestComponentValue);
+            Assert.Equal(1, image.Components.Count);
+            Assert.Equal(Component.White, image.Components[0]);
+            Assert.Equal(0, image.GetNativePixel(0, 0)[0]);
+            Assert.Equal(1, image.GetNativePixel(1, 0)[0]);
+            Assert.Equal(1, image.GetNativePixel(0, 1)[0]);
+            Assert.Equal(0, image.GetNativePixel(1, 1)[0]);
+        }
+
+        [Fact]
+        public void ValidTwoTimesTwoWithComment()
+        {
+            var bodyRawBytes = new object[]
+            {
+                'P', '5',
+                '\n',
+                '2', ' ', '2', ' ', '#', 'l', 'o', 'l', '\n', '1', '\n',
+                0x00, 0x01,
+                0x01, 0x00
+            };
+            var bodyBytes = bodyRawBytes.Select(Convert.ToByte).ToArray();
+
+            var factory = new ImageFactories.Image8Factory();
+            var reader = new NetpbmReader();
+            NetpbmImage8 image;
+            using (var bodyStream = new MemoryStream(bodyBytes, false))
+            {
+                image = (NetpbmImage8)reader.ReadImage(bodyStream, factory);
+                Assert.Equal(-1, bodyStream.ReadByte());
+            }
+
+            Assert.Equal(2, image.Width);
+            Assert.Equal(2, image.Height);
+            Assert.Equal(1, image.HighestComponentValue);
+            Assert.Equal(1, image.Components.Count);
+            Assert.Equal(Component.White, image.Components[0]);
+            Assert.Equal(0, image.GetNativePixel(0, 0)[0]);
+            Assert.Equal(1, image.GetNativePixel(1, 0)[0]);
+            Assert.Equal(1, image.GetNativePixel(0, 1)[0]);
+            Assert.Equal(0, image.GetNativePixel(1, 1)[0]);
+        }
+
+        [Fact]
+        public void ValidTwoTimesTwoWithCommentGauntlet()
+        {
+            var bodyRawBytes = new object[]
+            {
+                'P', '5',
+                '\n',
+                '0', '#', 'o', 'm', 'g', '\n', '2', ' ', '2', ' ', '#', 'l', 'o', 'l', '\n', '#', ' ', 'r', 'o', 'f', 'l', '\n', '1', '\n',
+                0x00, 0x01,
+                0x01, 0x00
+            };
+            var bodyBytes = bodyRawBytes.Select(Convert.ToByte).ToArray();
+            
             var factory = new ImageFactories.Image8Factory();
             var reader = new NetpbmReader();
             NetpbmImage8 image;

@@ -221,7 +221,7 @@ namespace RavuAlHemio.PbmNet
                     writer.WriteUnprefixed("WIDTH {0}\n", image.Width);
 
                     // output height line
-                    writer.WriteUnprefixed("HEIGHT {0}\n", image.Width);
+                    writer.WriteUnprefixed("HEIGHT {0}\n", image.Height);
 
                     // output number of components
                     writer.WriteUnprefixed("DEPTH {0}\n", image.Components.Count);

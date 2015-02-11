@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
     <metadata>
         <id>RavuAlHemio.PbmNet</id>
-        <version>0.0.1</version>
+        <version>0.0.2</version>
         <title>RavuAlHemio.PbmNet</title>
         <authors>Ondřej Hošek</authors>
         <licenseUrl>https://creativecommons.org/publicdomain/zero/1.0/</licenseUrl>
@@ -11,9 +11,9 @@
         <description>Portable .NET library for reading and writing files in the Netpbm formats.</description>
         <copyright>Copyright © 2015 Ondřej Hošek</copyright>
         <tags>netpbm pbm pnm pgm ppm</tags>
-        <frameworkAssemblies>
-            <frameworkAssembly assemblyName="Accessibility" targetFramework="" />
-        </frameworkAssemblies>
     </metadata>
-    <files />
+    <files>
+        <file src="RavuAlHemio.PbmNet/bin/Debug/RavuAlHemio.PbmNet.dll" target="lib\portable-net45+win8+wpa81\" />
+        <file src="RavuAlHemio.PbmNet/bin/Debug/RavuAlHemio.PbmNet.pdb" target="lib\portable-net45+win8+wpa81\" />
+    </files>
 </package>

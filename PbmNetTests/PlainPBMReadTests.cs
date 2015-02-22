@@ -23,13 +23,14 @@ namespace PbmNetTests
             using (var bodyStream = new MemoryStream(bodyBytes, false))
             {
                 image = (NetpbmImage8)reader.ReadImage(bodyStream, factory);
+                image.LoadData();
             }
 
-            Assert.Equal(2, image.Width);
-            Assert.Equal(2, image.Height);
-            Assert.Equal(1, image.HighestComponentValue);
-            Assert.Equal(1, image.Components.Count);
-            Assert.Equal(Component.Black, image.Components[0]);
+            Assert.Equal(2, image.Header.Width);
+            Assert.Equal(2, image.Header.Height);
+            Assert.Equal(1, image.Header.HighestComponentValue);
+            Assert.Equal(1, image.Header.Components.Count);
+            Assert.Equal(Component.Black, image.Header.Components[0]);
             Assert.Equal(0, image.GetNativePixel(0, 0)[0]);
             Assert.Equal(1, image.GetNativePixel(1, 0)[0]);
             Assert.Equal(1, image.GetNativePixel(0, 1)[0]);
@@ -48,13 +49,14 @@ namespace PbmNetTests
             using (var bodyStream = new MemoryStream(bodyBytes, false))
             {
                 image = (NetpbmImage8)reader.ReadImage(bodyStream, factory);
+                image.LoadData();
             }
 
-            Assert.Equal(3, image.Width);
-            Assert.Equal(2, image.Height);
-            Assert.Equal(1, image.HighestComponentValue);
-            Assert.Equal(1, image.Components.Count);
-            Assert.Equal(Component.Black, image.Components[0]);
+            Assert.Equal(3, image.Header.Width);
+            Assert.Equal(2, image.Header.Height);
+            Assert.Equal(1, image.Header.HighestComponentValue);
+            Assert.Equal(1, image.Header.Components.Count);
+            Assert.Equal(Component.Black, image.Header.Components[0]);
             Assert.Equal(0, image.GetNativePixel(0, 0)[0]);
             Assert.Equal(1, image.GetNativePixel(1, 0)[0]);
             Assert.Equal(1, image.GetNativePixel(2, 0)[0]);
@@ -75,7 +77,8 @@ namespace PbmNetTests
             {
                 using (var bodyStream = new MemoryStream(bodyBytes, false))
                 {
-                    reader.ReadImage(bodyStream, factory);
+                    var image = reader.ReadImage(bodyStream, factory);
+                    image.LoadData();
                 }
             });
         }
@@ -92,7 +95,8 @@ namespace PbmNetTests
             {
                 using (var bodyStream = new MemoryStream(bodyBytes, false))
                 {
-                    reader.ReadImage(bodyStream, factory);
+                    var image = reader.ReadImage(bodyStream, factory);
+                    image.LoadData();
                 }
             });
         }
@@ -109,7 +113,8 @@ namespace PbmNetTests
             {
                 using (var bodyStream = new MemoryStream(bodyBytes, false))
                 {
-                    reader.ReadImage(bodyStream, factory);
+                    var image = reader.ReadImage(bodyStream, factory);
+                    image.LoadData();
                 }
             });
         }
@@ -126,7 +131,8 @@ namespace PbmNetTests
             {
                 using (var bodyStream = new MemoryStream(bodyBytes, false))
                 {
-                    reader.ReadImage(bodyStream, factory);
+                    var image = reader.ReadImage(bodyStream, factory);
+                    image.LoadData();
                 }
             });
         }

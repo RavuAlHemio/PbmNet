@@ -10,41 +10,48 @@ namespace PbmNetTests
         [Fact]
         public void SinglePixelBitmapAdditiveToSubtractive()
         {
-            var subtractive = new NetpbmImage8(1, 1, 1, new[] {Component.Black}, new[] {new byte[] {1}});
+            var subtractiveHeader = new NetpbmHeader<byte>(ImageType.PAM, 1, 1, 1, new[] {Component.Black}, 1);
+            var subtractive = new NetpbmImage8(subtractiveHeader, new[] {new byte[] {1}});
             var canon = new Canonicalizer();
             var additive = canon.Canonicalize(subtractive, GrayscaleConversion.BlackToWhite);
+            additive.LoadData();
 
-            Assert.Equal(1, additive.Width);
-            Assert.Equal(1, additive.Height);
-            Assert.Equal(1, additive.HighestComponentValue);
-            Assert.Equal(1, additive.Components.Count);
-            Assert.Equal(Component.White, additive.Components[0]);
-            Assert.Equal(1, additive.NativeRows.Count);
-            Assert.Equal(1, additive.NativeRows[0].Count);
-            Assert.Equal(0, additive.NativeRows[0][0]);
+            Assert.Equal(1, additive.Header.Width);
+            Assert.Equal(1, additive.Header.Height);
+            Assert.Equal(1, additive.Header.HighestComponentValue);
+            Assert.Equal(1, additive.Header.Components.Count);
+            Assert.Equal(Component.White, additive.Header.Components[0]);
+            Assert.NotNull(additive.LoadedNativeRows);
+            Assert.Equal(1, additive.LoadedNativeRows.Count);
+            Assert.Equal(1, additive.LoadedNativeRows[0].Count);
+            Assert.Equal(0, additive.LoadedNativeRows[0][0]);
         }
 
         [Fact]
         public void SinglePixelBitmapSubtractiveToAdditive()
         {
-            var additive = new NetpbmImage8(1, 1, 1, new[] {Component.White}, new[] {new byte[] {1}});
+            var additiveHeader = new NetpbmHeader<byte>(ImageType.PAM, 1, 1, 1, new[] { Component.White }, 1);
+            var additive = new NetpbmImage8(additiveHeader, new[] { new byte[] { 1 } });
             var canon = new Canonicalizer();
             var subtractive = canon.Canonicalize(additive, GrayscaleConversion.WhiteToBlack);
+            subtractive.LoadData();
 
-            Assert.Equal(1, subtractive.Width);
-            Assert.Equal(1, subtractive.Height);
-            Assert.Equal(1, subtractive.HighestComponentValue);
-            Assert.Equal(1, subtractive.Components.Count);
-            Assert.Equal(Component.Black, subtractive.Components[0]);
-            Assert.Equal(1, subtractive.NativeRows.Count);
-            Assert.Equal(1, subtractive.NativeRows[0].Count);
-            Assert.Equal(0, subtractive.NativeRows[0][0]);
+            Assert.Equal(1, subtractive.Header.Width);
+            Assert.Equal(1, subtractive.Header.Height);
+            Assert.Equal(1, subtractive.Header.HighestComponentValue);
+            Assert.Equal(1, subtractive.Header.Components.Count);
+            Assert.Equal(Component.Black, subtractive.Header.Components[0]);
+            Assert.NotNull(subtractive.LoadedNativeRows);
+            Assert.Equal(1, subtractive.LoadedNativeRows.Count);
+            Assert.Equal(1, subtractive.LoadedNativeRows[0].Count);
+            Assert.Equal(0, subtractive.LoadedNativeRows[0][0]);
         }
 
         [Fact]
         public void ThreeTimesThreeGrayscaleSubtractiveToAdditive()
         {
-            var subtractive = new NetpbmImage8(3, 3, 255, new[] { Component.Black }, new[]
+            var subtractiveHeader = new NetpbmHeader<byte>(ImageType.PAM, 3, 3, 1, new[] {Component.Black}, 255);
+            var subtractive = new NetpbmImage8(subtractiveHeader, new[]
             {
                 new byte[] { 12, 34, 56 },
                 new byte[] { 78, 90, 12 },
@@ -52,31 +59,34 @@ namespace PbmNetTests
             });
             var canon = new Canonicalizer();
             var additive = canon.Canonicalize(subtractive, GrayscaleConversion.BlackToWhite);
+            additive.LoadData();
 
-            Assert.Equal(3, additive.Width);
-            Assert.Equal(3, additive.Height);
-            Assert.Equal(255, additive.HighestComponentValue);
-            Assert.Equal(1, additive.Components.Count);
-            Assert.Equal(Component.White, additive.Components[0]);
-            Assert.Equal(3, additive.NativeRows.Count);
-            Assert.Equal(3, additive.NativeRows[0].Count);
-            Assert.Equal(3, additive.NativeRows[1].Count);
-            Assert.Equal(3, additive.NativeRows[2].Count);
-            Assert.Equal(243, additive.NativeRows[0][0]);
-            Assert.Equal(221, additive.NativeRows[0][1]);
-            Assert.Equal(199, additive.NativeRows[0][2]);
-            Assert.Equal(177, additive.NativeRows[1][0]);
-            Assert.Equal(165, additive.NativeRows[1][1]);
-            Assert.Equal(243, additive.NativeRows[1][2]);
-            Assert.Equal(221, additive.NativeRows[2][0]);
-            Assert.Equal(199, additive.NativeRows[2][1]);
-            Assert.Equal(177, additive.NativeRows[2][2]);
+            Assert.Equal(3, additive.Header.Width);
+            Assert.Equal(3, additive.Header.Height);
+            Assert.Equal(255, additive.Header.HighestComponentValue);
+            Assert.Equal(1, additive.Header.Components.Count);
+            Assert.Equal(Component.White, additive.Header.Components[0]);
+            Assert.NotNull(additive.LoadedNativeRows);
+            Assert.Equal(3, additive.LoadedNativeRows.Count);
+            Assert.Equal(3, additive.LoadedNativeRows[0].Count);
+            Assert.Equal(3, additive.LoadedNativeRows[1].Count);
+            Assert.Equal(3, additive.LoadedNativeRows[2].Count);
+            Assert.Equal(243, additive.LoadedNativeRows[0][0]);
+            Assert.Equal(221, additive.LoadedNativeRows[0][1]);
+            Assert.Equal(199, additive.LoadedNativeRows[0][2]);
+            Assert.Equal(177, additive.LoadedNativeRows[1][0]);
+            Assert.Equal(165, additive.LoadedNativeRows[1][1]);
+            Assert.Equal(243, additive.LoadedNativeRows[1][2]);
+            Assert.Equal(221, additive.LoadedNativeRows[2][0]);
+            Assert.Equal(199, additive.LoadedNativeRows[2][1]);
+            Assert.Equal(177, additive.LoadedNativeRows[2][2]);
         }
 
         [Fact]
         public void ThreeTimesThreeGrayscaleAdditiveToSubtractive()
         {
-            var additive = new NetpbmImage8(3, 3, 255, new[] { Component.White }, new[]
+            var additiveHeader = new NetpbmHeader<byte>(ImageType.PAM, 3, 3, 1, new[] { Component.White }, 255);
+            var additive = new NetpbmImage8(additiveHeader, new[]
             {
                 new byte[] { 12, 34, 56 },
                 new byte[] { 78, 90, 12 },
@@ -84,34 +94,34 @@ namespace PbmNetTests
             });
             var canon = new Canonicalizer();
             var subtractive = canon.Canonicalize(additive, GrayscaleConversion.WhiteToBlack);
+            subtractive.LoadData();
 
-            Assert.Equal(3, subtractive.Width);
-            Assert.Equal(3, subtractive.Height);
-            Assert.Equal(255, subtractive.HighestComponentValue);
-            Assert.Equal(1, subtractive.Components.Count);
-            Assert.Equal(Component.Black, subtractive.Components[0]);
-            Assert.Equal(3, subtractive.NativeRows.Count);
-            Assert.Equal(3, subtractive.NativeRows[0].Count);
-            Assert.Equal(3, subtractive.NativeRows[1].Count);
-            Assert.Equal(3, subtractive.NativeRows[2].Count);
-            Assert.Equal(243, subtractive.NativeRows[0][0]);
-            Assert.Equal(221, subtractive.NativeRows[0][1]);
-            Assert.Equal(199, subtractive.NativeRows[0][2]);
-            Assert.Equal(177, subtractive.NativeRows[1][0]);
-            Assert.Equal(165, subtractive.NativeRows[1][1]);
-            Assert.Equal(243, subtractive.NativeRows[1][2]);
-            Assert.Equal(221, subtractive.NativeRows[2][0]);
-            Assert.Equal(199, subtractive.NativeRows[2][1]);
-            Assert.Equal(177, subtractive.NativeRows[2][2]);
+            Assert.Equal(3, subtractive.Header.Width);
+            Assert.Equal(3, subtractive.Header.Height);
+            Assert.Equal(255, subtractive.Header.HighestComponentValue);
+            Assert.Equal(1, subtractive.Header.Components.Count);
+            Assert.Equal(Component.Black, subtractive.Header.Components[0]);
+            Assert.NotNull(subtractive.LoadedNativeRows);
+            Assert.Equal(3, subtractive.LoadedNativeRows.Count);
+            Assert.Equal(3, subtractive.LoadedNativeRows[0].Count);
+            Assert.Equal(3, subtractive.LoadedNativeRows[1].Count);
+            Assert.Equal(3, subtractive.LoadedNativeRows[2].Count);
+            Assert.Equal(243, subtractive.LoadedNativeRows[0][0]);
+            Assert.Equal(221, subtractive.LoadedNativeRows[0][1]);
+            Assert.Equal(199, subtractive.LoadedNativeRows[0][2]);
+            Assert.Equal(177, subtractive.LoadedNativeRows[1][0]);
+            Assert.Equal(165, subtractive.LoadedNativeRows[1][1]);
+            Assert.Equal(243, subtractive.LoadedNativeRows[1][2]);
+            Assert.Equal(221, subtractive.LoadedNativeRows[2][0]);
+            Assert.Equal(199, subtractive.LoadedNativeRows[2][1]);
+            Assert.Equal(177, subtractive.LoadedNativeRows[2][2]);
         }
 
         [Fact]
         public void FiveTimesFiveCMYWToCMYK()
         {
-            var additive = new NetpbmImage8(5, 5, 255, new[]
-            {
-                Component.Cyan, Component.Magenta, Component.Yellow, Component.White
-            }, new[]
+            var additiveHeader = new NetpbmHeader<byte>(ImageType.PAM, 5, 5, 1, new[] { Component.Cyan, Component.Magenta, Component.Yellow, Component.White }, 255);
+            var additive = new NetpbmImage8(additiveHeader, new[]
             {
                 new byte[]
                 {
@@ -201,35 +211,35 @@ namespace PbmNetTests
 
             var canon = new Canonicalizer();
             var subtractive = canon.Canonicalize(additive, GrayscaleConversion.WhiteToBlack);
+            subtractive.LoadData();
 
-            Assert.Equal(5, subtractive.Width);
-            Assert.Equal(5, subtractive.Height);
-            Assert.Equal(255, subtractive.HighestComponentValue);
-            Assert.Equal(4, subtractive.Components.Count);
-            Assert.Equal(Component.Cyan, subtractive.Components[0]);
-            Assert.Equal(Component.Magenta, subtractive.Components[1]);
-            Assert.Equal(Component.Yellow, subtractive.Components[2]);
-            Assert.Equal(Component.Black, subtractive.Components[3]);
-            Assert.Equal(5, subtractive.NativeRows.Count);
-            Assert.Equal(20, subtractive.NativeRows[0].Count);
-            Assert.Equal(20, subtractive.NativeRows[1].Count);
-            Assert.Equal(20, subtractive.NativeRows[2].Count);
-            Assert.Equal(20, subtractive.NativeRows[3].Count);
-            Assert.Equal(20, subtractive.NativeRows[4].Count);
-            Assert.Equal((IEnumerable<byte>)referenceValues[0], (IEnumerable<byte>)subtractive.NativeRows[0]);
-            Assert.Equal((IEnumerable<byte>)referenceValues[1], (IEnumerable<byte>)subtractive.NativeRows[1]);
-            Assert.Equal((IEnumerable<byte>)referenceValues[2], (IEnumerable<byte>)subtractive.NativeRows[2]);
-            Assert.Equal((IEnumerable<byte>)referenceValues[3], (IEnumerable<byte>)subtractive.NativeRows[3]);
-            Assert.Equal((IEnumerable<byte>)referenceValues[4], (IEnumerable<byte>)subtractive.NativeRows[4]);
+            Assert.Equal(5, subtractive.Header.Width);
+            Assert.Equal(5, subtractive.Header.Height);
+            Assert.Equal(255, subtractive.Header.HighestComponentValue);
+            Assert.Equal(4, subtractive.Header.Components.Count);
+            Assert.Equal(Component.Cyan, subtractive.Header.Components[0]);
+            Assert.Equal(Component.Magenta, subtractive.Header.Components[1]);
+            Assert.Equal(Component.Yellow, subtractive.Header.Components[2]);
+            Assert.Equal(Component.Black, subtractive.Header.Components[3]);
+            Assert.NotNull(subtractive.LoadedNativeRows);
+            Assert.Equal(5, subtractive.LoadedNativeRows.Count);
+            Assert.Equal(20, subtractive.LoadedNativeRows[0].Count);
+            Assert.Equal(20, subtractive.LoadedNativeRows[1].Count);
+            Assert.Equal(20, subtractive.LoadedNativeRows[2].Count);
+            Assert.Equal(20, subtractive.LoadedNativeRows[3].Count);
+            Assert.Equal(20, subtractive.LoadedNativeRows[4].Count);
+            Assert.Equal((IEnumerable<byte>)referenceValues[0], (IEnumerable<byte>)subtractive.LoadedNativeRows[0]);
+            Assert.Equal((IEnumerable<byte>)referenceValues[1], (IEnumerable<byte>)subtractive.LoadedNativeRows[1]);
+            Assert.Equal((IEnumerable<byte>)referenceValues[2], (IEnumerable<byte>)subtractive.LoadedNativeRows[2]);
+            Assert.Equal((IEnumerable<byte>)referenceValues[3], (IEnumerable<byte>)subtractive.LoadedNativeRows[3]);
+            Assert.Equal((IEnumerable<byte>)referenceValues[4], (IEnumerable<byte>)subtractive.LoadedNativeRows[4]);
         }
 
         [Fact]
         public void ThreeTimesThreeBGRToRGB()
         {
-            var bgr = new NetpbmImage8(3, 3, 255, new[]
-            {
-                Component.Blue, Component.Green, Component.Red
-            }, new[]
+            var bgrHeader = new NetpbmHeader<byte>(ImageType.PAM, 3, 3, 1, new[] { Component.Blue, Component.Green, Component.Red }, 255);
+            var bgr = new NetpbmImage8(bgrHeader, new[]
             {
                 new byte[]
                 {
@@ -275,30 +285,30 @@ namespace PbmNetTests
 
             var canon = new Canonicalizer();
             var rgb = canon.Canonicalize(bgr, GrayscaleConversion.WhiteToBlack);
+            rgb.LoadData();
 
-            Assert.Equal(3, rgb.Width);
-            Assert.Equal(3, rgb.Height);
-            Assert.Equal(255, rgb.HighestComponentValue);
-            Assert.Equal(3, rgb.Components.Count);
-            Assert.Equal(Component.Red, rgb.Components[0]);
-            Assert.Equal(Component.Green, rgb.Components[1]);
-            Assert.Equal(Component.Blue, rgb.Components[2]);
-            Assert.Equal(3, rgb.NativeRows.Count);
-            Assert.Equal(9, rgb.NativeRows[0].Count);
-            Assert.Equal(9, rgb.NativeRows[1].Count);
-            Assert.Equal(9, rgb.NativeRows[2].Count);
-            Assert.Equal((IEnumerable<byte>)referenceValues[0], (IEnumerable<byte>)rgb.NativeRows[0]);
-            Assert.Equal((IEnumerable<byte>)referenceValues[1], (IEnumerable<byte>)rgb.NativeRows[1]);
-            Assert.Equal((IEnumerable<byte>)referenceValues[2], (IEnumerable<byte>)rgb.NativeRows[2]);
+            Assert.Equal(3, rgb.Header.Width);
+            Assert.Equal(3, rgb.Header.Height);
+            Assert.Equal(255, rgb.Header.HighestComponentValue);
+            Assert.Equal(3, rgb.Header.Components.Count);
+            Assert.Equal(Component.Red, rgb.Header.Components[0]);
+            Assert.Equal(Component.Green, rgb.Header.Components[1]);
+            Assert.Equal(Component.Blue, rgb.Header.Components[2]);
+            Assert.NotNull(rgb.LoadedNativeRows);
+            Assert.Equal(3, rgb.LoadedNativeRows.Count);
+            Assert.Equal(9, rgb.LoadedNativeRows[0].Count);
+            Assert.Equal(9, rgb.LoadedNativeRows[1].Count);
+            Assert.Equal(9, rgb.LoadedNativeRows[2].Count);
+            Assert.Equal((IEnumerable<byte>)referenceValues[0], (IEnumerable<byte>)rgb.LoadedNativeRows[0]);
+            Assert.Equal((IEnumerable<byte>)referenceValues[1], (IEnumerable<byte>)rgb.LoadedNativeRows[1]);
+            Assert.Equal((IEnumerable<byte>)referenceValues[2], (IEnumerable<byte>)rgb.LoadedNativeRows[2]);
         }
 
         [Fact]
         public void FiveTimesFiveWCMYToCMYK()
         {
-            var additive = new NetpbmImage8(5, 5, 255, new[]
-            {
-                Component.White, Component.Cyan, Component.Magenta, Component.Yellow
-            }, new[]
+            var additiveHeader = new NetpbmHeader<byte>(ImageType.PAM, 5, 5, 1, new[] { Component.White, Component.Cyan, Component.Magenta, Component.Yellow }, 255);
+            var additive = new NetpbmImage8(additiveHeader, new[]
             {
                 new byte[]
                 {
@@ -388,26 +398,28 @@ namespace PbmNetTests
 
             var canon = new Canonicalizer();
             var subtractive = canon.Canonicalize(additive, GrayscaleConversion.WhiteToBlack);
+            subtractive.LoadData();
 
-            Assert.Equal(5, subtractive.Width);
-            Assert.Equal(5, subtractive.Height);
-            Assert.Equal(255, subtractive.HighestComponentValue);
-            Assert.Equal(4, subtractive.Components.Count);
-            Assert.Equal(Component.Cyan, subtractive.Components[0]);
-            Assert.Equal(Component.Magenta, subtractive.Components[1]);
-            Assert.Equal(Component.Yellow, subtractive.Components[2]);
-            Assert.Equal(Component.Black, subtractive.Components[3]);
-            Assert.Equal(5, subtractive.NativeRows.Count);
-            Assert.Equal(20, subtractive.NativeRows[0].Count);
-            Assert.Equal(20, subtractive.NativeRows[1].Count);
-            Assert.Equal(20, subtractive.NativeRows[2].Count);
-            Assert.Equal(20, subtractive.NativeRows[3].Count);
-            Assert.Equal(20, subtractive.NativeRows[4].Count);
-            Assert.Equal((IEnumerable<byte>)referenceValues[0], (IEnumerable<byte>)subtractive.NativeRows[0]);
-            Assert.Equal((IEnumerable<byte>)referenceValues[1], (IEnumerable<byte>)subtractive.NativeRows[1]);
-            Assert.Equal((IEnumerable<byte>)referenceValues[2], (IEnumerable<byte>)subtractive.NativeRows[2]);
-            Assert.Equal((IEnumerable<byte>)referenceValues[3], (IEnumerable<byte>)subtractive.NativeRows[3]);
-            Assert.Equal((IEnumerable<byte>)referenceValues[4], (IEnumerable<byte>)subtractive.NativeRows[4]);
+            Assert.Equal(5, subtractive.Header.Width);
+            Assert.Equal(5, subtractive.Header.Height);
+            Assert.Equal(255, subtractive.Header.HighestComponentValue);
+            Assert.Equal(4, subtractive.Header.Components.Count);
+            Assert.Equal(Component.Cyan, subtractive.Header.Components[0]);
+            Assert.Equal(Component.Magenta, subtractive.Header.Components[1]);
+            Assert.Equal(Component.Yellow, subtractive.Header.Components[2]);
+            Assert.Equal(Component.Black, subtractive.Header.Components[3]);
+            Assert.NotNull(subtractive.LoadedNativeRows);
+            Assert.Equal(5, subtractive.LoadedNativeRows.Count);
+            Assert.Equal(20, subtractive.LoadedNativeRows[0].Count);
+            Assert.Equal(20, subtractive.LoadedNativeRows[1].Count);
+            Assert.Equal(20, subtractive.LoadedNativeRows[2].Count);
+            Assert.Equal(20, subtractive.LoadedNativeRows[3].Count);
+            Assert.Equal(20, subtractive.LoadedNativeRows[4].Count);
+            Assert.Equal((IEnumerable<byte>)referenceValues[0], (IEnumerable<byte>)subtractive.LoadedNativeRows[0]);
+            Assert.Equal((IEnumerable<byte>)referenceValues[1], (IEnumerable<byte>)subtractive.LoadedNativeRows[1]);
+            Assert.Equal((IEnumerable<byte>)referenceValues[2], (IEnumerable<byte>)subtractive.LoadedNativeRows[2]);
+            Assert.Equal((IEnumerable<byte>)referenceValues[3], (IEnumerable<byte>)subtractive.LoadedNativeRows[3]);
+            Assert.Equal((IEnumerable<byte>)referenceValues[4], (IEnumerable<byte>)subtractive.LoadedNativeRows[4]);
         }
     }
 }

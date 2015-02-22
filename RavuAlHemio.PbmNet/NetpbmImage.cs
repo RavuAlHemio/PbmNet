@@ -117,7 +117,7 @@ namespace RavuAlHemio.PbmNet
         /// image has not been loaded, returns <c>null</c>.
         /// </summary>
         /// <value>The list of rows, or <c>null</c>.</value>
-        public IEnumerable<IEnumerable<TPixelComponent>> LoadedNativeRows
+        public IList<IList<TPixelComponent>> LoadedNativeRows
         {
             get
             {
@@ -174,7 +174,17 @@ namespace RavuAlHemio.PbmNet
             var myRows = new List<IList<TPixelComponent>>(Header.Height);
             foreach (var row in Rows)
             {
-                var rowPixels = new List<TPixelComponent>(row);
+                List<TPixelComponent> rowPixels;
+                try
+                {
+                    rowPixels = new List<TPixelComponent>(row);
+                }
+                catch (OverflowException exc)
+                {
+                    throw new InvalidDataException(string.Format("row {0} contains a pixel value that is way out of range", myRows.Count),
+                        exc);
+                }
+                
                 if (rowPixels.Count != Header.Width * Header.Components.Count)
                 {
                     throw new InvalidDataException(

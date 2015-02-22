@@ -547,7 +547,7 @@ namespace RavuAlHemio.PbmNet
                     yield return imageFactory.ReadRow(stream, header.Width, header.Components.Count, header.HighestComponentValue);
                 }
             }
-            else if (header.ImageType == ImageType.PlainPGM || header.ImageType == ImageType.PlainPBM)
+            else if (header.ImageType == ImageType.PlainPGM || header.ImageType == ImageType.PlainPPM)
             {
                 for (int r = 0; r < header.Height; ++r)
                 {

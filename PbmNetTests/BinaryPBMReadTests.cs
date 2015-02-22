@@ -27,14 +27,15 @@ namespace PbmNetTests
             using (var bodyStream = new MemoryStream(bodyBytes, false))
             {
                 image = (NetpbmImage8)reader.ReadImage(bodyStream, factory);
+                image.LoadData();
                 Assert.Equal(-1, bodyStream.ReadByte());
             }
 
-            Assert.Equal(2, image.Width);
-            Assert.Equal(2, image.Height);
-            Assert.Equal(1, image.HighestComponentValue);
-            Assert.Equal(1, image.Components.Count);
-            Assert.Equal(Component.Black, image.Components[0]);
+            Assert.Equal(2, image.Header.Width);
+            Assert.Equal(2, image.Header.Height);
+            Assert.Equal(1, image.Header.HighestComponentValue);
+            Assert.Equal(1, image.Header.Components.Count);
+            Assert.Equal(Component.Black, image.Header.Components[0]);
             Assert.Equal(0, image.GetNativePixel(0, 0)[0]);
             Assert.Equal(1, image.GetNativePixel(1, 0)[0]);
             Assert.Equal(1, image.GetNativePixel(0, 1)[0]);
@@ -60,14 +61,15 @@ namespace PbmNetTests
             using (var bodyStream = new MemoryStream(bodyBytes, false))
             {
                 image = (NetpbmImage8)reader.ReadImage(bodyStream, factory);
+                image.LoadData();
                 Assert.Equal(-1, bodyStream.ReadByte());
             }
 
-            Assert.Equal(3, image.Width);
-            Assert.Equal(2, image.Height);
-            Assert.Equal(1, image.HighestComponentValue);
-            Assert.Equal(1, image.Components.Count);
-            Assert.Equal(Component.Black, image.Components[0]);
+            Assert.Equal(3, image.Header.Width);
+            Assert.Equal(2, image.Header.Height);
+            Assert.Equal(1, image.Header.HighestComponentValue);
+            Assert.Equal(1, image.Header.Components.Count);
+            Assert.Equal(Component.Black, image.Header.Components[0]);
             Assert.Equal(0, image.GetNativePixel(0, 0)[0]);
             Assert.Equal(1, image.GetNativePixel(1, 0)[0]);
             Assert.Equal(1, image.GetNativePixel(2, 0)[0]);
@@ -93,7 +95,8 @@ namespace PbmNetTests
             {
                 using (var bodyStream = new MemoryStream(bodyBytes, false))
                 {
-                    reader.ReadImage(bodyStream, factory);
+                    var image = reader.ReadImage(bodyStream, factory);
+                    image.LoadData();
                 }
             });
         }
@@ -115,7 +118,8 @@ namespace PbmNetTests
             {
                 using (var bodyStream = new MemoryStream(bodyBytes, false))
                 {
-                    reader.ReadImage(bodyStream, factory);
+                    var image = reader.ReadImage(bodyStream, factory);
+                    image.LoadData();
                 }
             });
         }
@@ -145,25 +149,27 @@ namespace PbmNetTests
             using (var bodyStream = new MemoryStream(bodyBytes, false))
             {
                 firstImage = (NetpbmImage8)reader.ReadImage(bodyStream, factory);
+                firstImage.LoadData();
                 secondImage = (NetpbmImage8)reader.ReadImage(bodyStream, factory);
+                secondImage.LoadData();
                 Assert.Equal(-1, bodyStream.ReadByte());
             }
 
-            Assert.Equal(2, firstImage.Width);
-            Assert.Equal(2, firstImage.Height);
-            Assert.Equal(1, firstImage.HighestComponentValue);
-            Assert.Equal(1, firstImage.Components.Count);
-            Assert.Equal(Component.Black, firstImage.Components[0]);
+            Assert.Equal(2, firstImage.Header.Width);
+            Assert.Equal(2, firstImage.Header.Height);
+            Assert.Equal(1, firstImage.Header.HighestComponentValue);
+            Assert.Equal(1, firstImage.Header.Components.Count);
+            Assert.Equal(Component.Black, firstImage.Header.Components[0]);
             Assert.Equal(0, firstImage.GetNativePixel(0, 0)[0]);
             Assert.Equal(1, firstImage.GetNativePixel(1, 0)[0]);
             Assert.Equal(1, firstImage.GetNativePixel(0, 1)[0]);
             Assert.Equal(0, firstImage.GetNativePixel(1, 1)[0]);
 
-            Assert.Equal(2, secondImage.Width);
-            Assert.Equal(2, secondImage.Height);
-            Assert.Equal(1, secondImage.HighestComponentValue);
-            Assert.Equal(1, secondImage.Components.Count);
-            Assert.Equal(Component.Black, secondImage.Components[0]);
+            Assert.Equal(2, secondImage.Header.Width);
+            Assert.Equal(2, secondImage.Header.Height);
+            Assert.Equal(1, secondImage.Header.HighestComponentValue);
+            Assert.Equal(1, secondImage.Header.Components.Count);
+            Assert.Equal(Component.Black, secondImage.Header.Components[0]);
             Assert.Equal(1, secondImage.GetNativePixel(0, 0)[0]);
             Assert.Equal(1, secondImage.GetNativePixel(1, 0)[0]);
             Assert.Equal(0, secondImage.GetNativePixel(0, 1)[0]);

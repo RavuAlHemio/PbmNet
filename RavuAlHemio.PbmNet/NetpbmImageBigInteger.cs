@@ -9,33 +9,19 @@ namespace RavuAlHemio.PbmNet
     /// </summary>
     public class NetpbmImageBigInteger : NetpbmImage<BigInteger>
     {
-        public NetpbmImageBigInteger(int width, int height, BigInteger highestComponentValue,
-            IEnumerable<Component> components, IEnumerable<IEnumerable<BigInteger>> pixelData)
-            : base(width, height, highestComponentValue, components, pixelData)
+        public NetpbmImageBigInteger(NetpbmHeader<BigInteger> header, IEnumerable<IEnumerable<BigInteger>> pixelData)
+            : base(header, pixelData)
         {
         }
 
         protected override bool IsPixelComponentInRange(BigInteger component)
         {
-            return component.Sign != -1 && component <= HighestComponentValue;
-        }
-
-        public override int BytesPerPixelComponent
-        {
-            get { return ComponentToBigEndianBytes(HighestComponentValue).Count(); }
+            return component.Sign != -1 && component <= Header.HighestComponentValue;
         }
 
         public override double ScalePixelComponent(BigInteger pixelComponent)
         {
-            return (double)pixelComponent / (double)HighestComponentValue;
-        }
-
-        public override bool IsBitmap
-        {
-            get
-            {
-                return HighestComponentValue.IsOne;
-            }
+            return (double)pixelComponent / (double)Header.HighestComponentValue;
         }
 
         internal override IEnumerable<byte> ComponentToBigEndianBytes(BigInteger pixelComponent)
@@ -51,7 +37,7 @@ namespace RavuAlHemio.PbmNet
             }
 
             // extend to the necessary length
-            var requiredLength = BytesPerPixelComponent;
+            var requiredLength = Header.BytesPerPixelComponent;
             while (list.Count < requiredLength)
             {
                 list.Add(0);
@@ -65,7 +51,7 @@ namespace RavuAlHemio.PbmNet
 
         internal override BigInteger InvertPixelValue(BigInteger pixelComponent)
         {
-            return HighestComponentValue - pixelComponent;
+            return Header.HighestComponentValue - pixelComponent;
         }
 
         internal override bool IsComponentValueZero(BigInteger componentValue)
@@ -73,10 +59,10 @@ namespace RavuAlHemio.PbmNet
             return componentValue.IsZero;
         }
 
-        public override NetpbmImage<BigInteger> NewImageOfSameType(int width, int height, BigInteger highestComponentValue, IEnumerable<Component> components,
+        public override NetpbmImage<BigInteger> NewImageOfSameType(NetpbmHeader<BigInteger> header,
             IEnumerable<IEnumerable<BigInteger>> pixelData)
         {
-            return new NetpbmImageBigInteger(width, height, highestComponentValue, components, pixelData);
+            return new NetpbmImageBigInteger(header, pixelData);
         }
     }
 }

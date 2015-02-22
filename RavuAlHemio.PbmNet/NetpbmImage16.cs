@@ -7,33 +7,19 @@ namespace RavuAlHemio.PbmNet
     /// </summary>
     public class NetpbmImage16 : NetpbmImage<ushort>
     {
-        public NetpbmImage16(int width, int height, ushort highestComponentValue, IEnumerable<Component> components,
-            IEnumerable<IEnumerable<ushort>> pixelData)
-            : base(width, height, highestComponentValue, components, pixelData)
+        public NetpbmImage16(NetpbmHeader<ushort> header, IEnumerable<IEnumerable<ushort>> pixelData)
+            : base(header, pixelData)
         {
         }
 
         protected override bool IsPixelComponentInRange(ushort component)
         {
-            return component <= HighestComponentValue;
-        }
-
-        public override int BytesPerPixelComponent
-        {
-            get { return 2; }
+            return component <= Header.HighestComponentValue;
         }
 
         public override double ScalePixelComponent(ushort pixelComponent)
         {
-            return pixelComponent / (double)HighestComponentValue;
-        }
-
-        public override bool IsBitmap
-        {
-            get
-            {
-                return HighestComponentValue == 1;
-            }
+            return pixelComponent / (double)Header.HighestComponentValue;
         }
 
         internal override IEnumerable<byte> ComponentToBigEndianBytes(ushort pixelComponent)
@@ -44,7 +30,7 @@ namespace RavuAlHemio.PbmNet
 
         internal override ushort InvertPixelValue(ushort pixelComponent)
         {
-            return (ushort)(HighestComponentValue - pixelComponent);
+            return (ushort)(Header.HighestComponentValue - pixelComponent);
         }
 
         internal override bool IsComponentValueZero(ushort componentValue)
@@ -52,10 +38,10 @@ namespace RavuAlHemio.PbmNet
             return (componentValue == 0);
         }
 
-        public override NetpbmImage<ushort> NewImageOfSameType(int width, int height, ushort highestComponentValue, IEnumerable<Component> components,
+        public override NetpbmImage<ushort> NewImageOfSameType(NetpbmHeader<ushort> header,
             IEnumerable<IEnumerable<ushort>> pixelData)
         {
-            return new NetpbmImage16(width, height, highestComponentValue, components, pixelData);
+            return new NetpbmImage16(header, pixelData);
         }
     }
 }

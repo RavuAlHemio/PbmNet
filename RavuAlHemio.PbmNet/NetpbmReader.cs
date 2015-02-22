@@ -290,7 +290,7 @@ namespace RavuAlHemio.PbmNet
             value = null;
         }
 
-        private NetpbmImage<TPixelFormat> ReadPAM<TPixelFormat>(Stream stream, IImageFactory<TPixelFormat> imageFactory)
+        private NetpbmHeader<TPixelFormat> ReadPAMHeader<TPixelFormat>(Stream stream, IImageFactory<TPixelFormat> imageFactory)
         {
             // ensure the next character is a newline
             var newline = stream.ReadByte();
@@ -412,6 +412,7 @@ namespace RavuAlHemio.PbmNet
             // don't worry if the tuple type is missing
 
             var maxValue = imageFactory.ParseHighestComponentValue(maxValueString);
+            var bytesPerComponent = imageFactory.GetNumberOfBytesPerPixelComponent(maxValue);
 
             var components = KnownTupleTypes.DecodeComponentString(tupleType).ToList();
             if (components.Count != depth.Value)
@@ -421,17 +422,26 @@ namespace RavuAlHemio.PbmNet
 
             // final newline has been discarded by ReadUntilAndDiscardNewline
 
-            // read the data!
-            var rows = new List<IEnumerable<TPixelFormat>>();
-            for (int r = 0; r < height.Value; ++r)
-            {
-                rows.Add(imageFactory.ReadRow(stream, width.Value, depth.Value, maxValue));
-            }
-
-            return imageFactory.MakeImage(width.Value, height.Value, maxValue, components, rows);
+            return new NetpbmHeader<TPixelFormat>(
+                (bytesPerComponent > 2) ? ImageType.BigPAM : ImageType.PAM,
+                width.Value,
+                height.Value,
+                bytesPerComponent,
+                components,
+                maxValue
+            );
         }
 
-        private NetpbmImage<TPixelFormat> ReadPBM<TPixelFormat>(Stream stream, ValueEncoding valueEncoding, IImageFactory<TPixelFormat> imageFactory)
+        private IEnumerable<IEnumerable<TPixelFormat>> ReadPAMData<TPixelFormat>(Stream stream, NetpbmHeader<TPixelFormat> header, IImageFactory<TPixelFormat> imageFactory)
+        {
+            // read the data!
+            for (int r = 0; r < header.Height; ++r)
+            {
+                yield return imageFactory.ReadRow(stream, header.Width, header.Components.Count, header.HighestComponentValue);
+            }
+        }
+
+        private NetpbmHeader<TPixelFormat> ReadPBMHeader<TPixelFormat>(Stream stream, ValueEncoding valueEncoding, IImageFactory<TPixelFormat> imageFactory)
         {
             int width;
             var widthBytes = SkipWhitespaceAndReadUntilNextWhitespaceByte(stream, true);
@@ -451,32 +461,44 @@ namespace RavuAlHemio.PbmNet
 
             // final byte of whitespace has been discarded by SkipWhitespaceAndReadUntilNextWhitespaceByte
 
+            return new NetpbmHeader<TPixelFormat>(
+                (valueEncoding == ValueEncoding.Plain) ? ImageType.PlainPBM : ImageType.PBM,
+                width,
+                height,
+                1,
+                new[] {Component.Black},
+                imageFactory.BitmapOnPixelComponentValue
+            );
+        }
+
+        private IEnumerable<IEnumerable<TPixelFormat>> ReadPBMData<TPixelFormat>(Stream stream,
+            NetpbmHeader<TPixelFormat> header, IImageFactory<TPixelFormat> imageFactory)
+        {
             // read the bits!
-            var rows = new List<IEnumerable<TPixelFormat>>();
-            if (valueEncoding == ValueEncoding.Binary)
+            if (header.ImageType == ImageType.PBM)
             {
-                for (int r = 0; r < height; ++r)
+                for (int r = 0; r < header.Height; ++r)
                 {
-                    rows.Add(ReadBinaryPBMRow(stream, width, imageFactory));
+                    yield return ReadBinaryPBMRow(stream, header.Width, imageFactory);
                 }
             }
-            else if (valueEncoding == ValueEncoding.Plain)
+            else if (header.ImageType == ImageType.PlainPBM)
             {
-                for (int r = 0; r < height; ++r)
+                for (int r = 0; r < header.Height; ++r)
                 {
-                    rows.Add(ReadPlainRow(stream, width, r == height-1, imageFactory));
+                    yield return ReadPlainRow(stream, header.Width, r == header.Height-1, imageFactory);
                 }
             }
             else
             {
-                throw new ArgumentOutOfRangeException("valueEncoding", valueEncoding, "unknown value encoding");
+                throw new ArgumentOutOfRangeException("header.ImageType", header.ImageType, "image type unsupported by this method");
             }
 
-            return imageFactory.MakeImage(width, height, imageFactory.BitmapOnPixelComponentValue,
-                new[] {Component.Black}, rows);
+            /*return imageFactory.MakeImage(width, height, imageFactory.BitmapOnPixelComponentValue,
+                new[] {Component.Black}, rows);*/
         }
 
-        private NetpbmImage<TPixelFormat> ReadPGMOrPPM<TPixelFormat>(Stream stream, ValueEncoding valueEncoding, IImageFactory<TPixelFormat> imageFactory, params Component[] components)
+        private NetpbmHeader<TPixelFormat> ReadPGMOrPPMHeader<TPixelFormat>(Stream stream, ValueEncoding valueEncoding, IImageFactory<TPixelFormat> imageFactory, params Component[] components)
         {
             int width;
             var widthBytes = SkipWhitespaceAndReadUntilNextWhitespaceByte(stream, true);
@@ -500,77 +522,116 @@ namespace RavuAlHemio.PbmNet
 
             // final byte of whitespace has been discarded by SkipWhitespaceAndReadUntilNextWhitespaceByte
 
+            return new NetpbmHeader<TPixelFormat>(
+                (components.Length == 1)
+                    ? ((valueEncoding == ValueEncoding.Binary) ? ImageType.PGM : ImageType.PlainPGM)
+                    : ((valueEncoding == ValueEncoding.Binary) ? ImageType.PPM : ImageType.PlainPPM),
+                width,
+                height,
+                imageFactory.GetNumberOfBytesPerPixelComponent(highestValue),
+                components,
+                highestValue
+            );
+
+            //return imageFactory.MakeImage(width, height, highestValue, components, rows);
+        }
+
+        private IEnumerable<IEnumerable<TPixelFormat>> ReadPGMOrPPMData<TPixelFormat>(Stream stream,
+            NetpbmHeader<TPixelFormat> header, IImageFactory<TPixelFormat> imageFactory)
+        {
             // read the bits!
-            var rows = new List<IEnumerable<TPixelFormat>>();
-            if (valueEncoding == ValueEncoding.Binary)
+            if (header.ImageType == ImageType.PGM || header.ImageType == ImageType.PPM)
             {
-                for (int r = 0; r < height; ++r)
+                for (int r = 0; r < header.Height; ++r)
                 {
-                    rows.Add(imageFactory.ReadRow(stream, width, components.Length, highestValue));
+                    yield return imageFactory.ReadRow(stream, header.Width, header.Components.Count, header.HighestComponentValue);
                 }
             }
-            else if (valueEncoding == ValueEncoding.Plain)
+            else if (header.ImageType == ImageType.PlainPGM || header.ImageType == ImageType.PlainPBM)
             {
-                for (int r = 0; r < height; ++r)
+                for (int r = 0; r < header.Height; ++r)
                 {
-                    rows.Add(ReadPlainRow(stream, width * components.Length, r == height - 1, imageFactory));
+                    yield return ReadPlainRow(stream, header.Width * header.Components.Count, r == header.Height - 1, imageFactory);
                 }
             }
             else
             {
-                throw new ArgumentOutOfRangeException("valueEncoding", valueEncoding, "unknown value encoding");
+                throw new ArgumentOutOfRangeException("header.ImageType", header.ImageType, "image type unsupported by this method");
             }
-
-            return imageFactory.MakeImage(width, height, highestValue, components, rows);
         }
 
-        public NetpbmImage<TPixelFormat> ReadImage<TPixelFormat>(Stream stream, IImageFactory<TPixelFormat> imageFactory)
+        public NetpbmHeader<TPixelFormat> ReadImageHeader<TPixelFormat>(Stream stream, IImageFactory<TPixelFormat> imageFactory)
         {
-            // P?
-            var magic = new byte[2];
-            if (stream.Read(magic, 0, 2) < 2)
+            var p = stream.ReadByte();
+            if (p == -1)
             {
-                throw new EndOfStreamException("reached end of stream while reading magic value");
+                throw new EndOfStreamException("reached end of stream while reading first magic byte");
             }
 
-            if (magic[0] != 'P')
+            if (p != 'P')
             {
                 throw new InvalidDataException("magic value does not start with 'P'");
             }
 
-            // choose format
-            if (magic[1] == '1')
+            var fmt = stream.ReadByte();
+            if (fmt == -1)
             {
-                return ReadPBM(stream, ValueEncoding.Plain, imageFactory);
+                throw new EndOfStreamException("reached end of stream while reading second magic byte");
             }
-            else if (magic[1] == '2')
+
+            switch (fmt)
             {
-                return ReadPGMOrPPM(stream, ValueEncoding.Plain, imageFactory, Component.White);
+                case '1':
+                    return ReadPBMHeader(stream, ValueEncoding.Plain, imageFactory);
+                case '2':
+                    return ReadPGMOrPPMHeader(stream, ValueEncoding.Plain, imageFactory, Component.White);
+                case '3':
+                    return ReadPGMOrPPMHeader(stream, ValueEncoding.Plain, imageFactory, Component.Red, Component.Green, Component.Blue);
+                case '4':
+                    return ReadPBMHeader(stream, ValueEncoding.Binary, imageFactory);
+                case '5':
+                    return ReadPGMOrPPMHeader(stream, ValueEncoding.Binary, imageFactory, Component.White);
+                case '6':
+                    return ReadPGMOrPPMHeader(stream, ValueEncoding.Binary, imageFactory, Component.Red, Component.Green, Component.Blue);
+                case '7':
+                    return ReadPAMHeader(stream, imageFactory);
+                default:
+                    throw new InvalidDataException("magic value discriminator isn't between 1 and 7");
             }
-            else if (magic[1] == '3')
+        }
+
+        public NetpbmImage<TPixelFormat> ReadImageData<TPixelFormat>(Stream stream, NetpbmHeader<TPixelFormat> header,
+            IImageFactory<TPixelFormat> imageFactory)
+        {
+            IEnumerable<IEnumerable<TPixelFormat>> data;
+
+            switch (header.ImageType)
             {
-                return ReadPGMOrPPM(stream, ValueEncoding.Plain, imageFactory, Component.Red, Component.Green, Component.Blue);
+                case ImageType.PlainPBM:
+                case ImageType.PBM:
+                    data = ReadPBMData(stream, header, imageFactory);
+                    break;
+                case ImageType.PlainPGM:
+                case ImageType.PGM:
+                case ImageType.PlainPPM:
+                case ImageType.PPM:
+                    data = ReadPGMOrPPMData(stream, header, imageFactory);
+                    break;
+                case ImageType.PAM:
+                case ImageType.BigPAM:
+                    data = ReadPAMData(stream, header, imageFactory);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException("header.ImageType", header.ImageType, "unknown image type");
             }
-            else if (magic[1] == '4')
-            {
-                return ReadPBM(stream, ValueEncoding.Binary, imageFactory);
-            }
-            else if (magic[1] == '5')
-            {
-                return ReadPGMOrPPM(stream, ValueEncoding.Binary, imageFactory, Component.White);
-            }
-            else if (magic[1] == '6')
-            {
-                return ReadPGMOrPPM(stream, ValueEncoding.Binary, imageFactory, Component.Red, Component.Green, Component.Blue);
-            }
-            else if (magic[1] == '7')
-            {
-                return ReadPAM(stream, imageFactory);
-            }
-            else
-            {
-                throw new InvalidDataException("magic value discriminator isn't between 1 and 7");
-            }
+
+            return imageFactory.MakeImage(header, data);
+        }
+
+        public NetpbmImage<TPixelFormat> ReadImage<TPixelFormat>(Stream stream, IImageFactory<TPixelFormat> imageFactory)
+        {
+            var header = ReadImageHeader(stream, imageFactory);
+            return ReadImageData(stream, header, imageFactory);
         }
     }
 }

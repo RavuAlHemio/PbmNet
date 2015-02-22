@@ -41,13 +41,13 @@ namespace RavuAlHemio.PbmNet
                 return ret;
             }
 
-            public NetpbmImage<byte> MakeImage(int width, int height, byte highestComponentValue, IEnumerable<Component> components, IEnumerable<IEnumerable<byte>> pixelData)
+            public NetpbmImage<byte> MakeImage(NetpbmHeader<byte> header, IEnumerable<IEnumerable<byte>> pixelData)
             {
                 Exception exception;
 
                 try
                 {
-                    return new NetpbmImage8(width, height, highestComponentValue, components, pixelData);
+                    return new NetpbmImage8(header, pixelData);
                 }
                 catch (ArgumentOutOfRangeException exc)
                 {
@@ -59,6 +59,11 @@ namespace RavuAlHemio.PbmNet
                 }
 
                 throw new InvalidDataException("invalid image format", exception);
+            }
+
+            public int GetNumberOfBytesPerPixelComponent(byte highestComponentValue)
+            {
+                return sizeof(byte);
             }
         }
 
@@ -106,13 +111,13 @@ namespace RavuAlHemio.PbmNet
                 return ret;
             }
 
-            public NetpbmImage<ushort> MakeImage(int width, int height, ushort highestComponentValue, IEnumerable<Component> components, IEnumerable<IEnumerable<ushort>> pixelData)
+            public NetpbmImage<ushort> MakeImage(NetpbmHeader<ushort> header, IEnumerable<IEnumerable<ushort>> pixelData)
             {
                 Exception exception;
 
                 try
                 {
-                    return new NetpbmImage16(width, height, highestComponentValue, components, pixelData);
+                    return new NetpbmImage16(header, pixelData);
                 }
                 catch (ArgumentOutOfRangeException exc)
                 {
@@ -124,6 +129,11 @@ namespace RavuAlHemio.PbmNet
                 }
 
                 throw new InvalidDataException("invalid image format", exception);
+            }
+
+            public int GetNumberOfBytesPerPixelComponent(ushort highestComponentValue)
+            {
+                return sizeof(ushort);
             }
         }
 
@@ -173,13 +183,13 @@ namespace RavuAlHemio.PbmNet
                 return ret;
             }
 
-            public NetpbmImage<uint> MakeImage(int width, int height, uint highestComponentValue, IEnumerable<Component> components, IEnumerable<IEnumerable<uint>> pixelData)
+            public NetpbmImage<uint> MakeImage(NetpbmHeader<uint> header, IEnumerable<IEnumerable<uint>> pixelData)
             {
                 Exception exception;
 
                 try
                 {
-                    return new NetpbmImage32(width, height, highestComponentValue, components, pixelData);
+                    return new NetpbmImage32(header, pixelData);
                 }
                 catch (ArgumentOutOfRangeException exc)
                 {
@@ -191,6 +201,11 @@ namespace RavuAlHemio.PbmNet
                 }
 
                 throw new InvalidDataException("invalid image format", exception);
+            }
+
+            public int GetNumberOfBytesPerPixelComponent(uint highestComponentValue)
+            {
+                return sizeof(uint);
             }
         }
 
@@ -218,15 +233,7 @@ namespace RavuAlHemio.PbmNet
 
             public IEnumerable<BigInteger> ReadRow(Stream stream, int width, int componentCount, BigInteger highestComponentValue)
             {
-                // find how many bytes each value needs
-                var highestBytes = highestComponentValue.ToByteArray();
-                var bytesPerValue = highestBytes.Length;
-                if (highestBytes[highestBytes.Length - 1] == 0)
-                {
-                    // additional byte to ensure number is positive
-                    // the file's encoding doesn't use this
-                    --bytesPerValue;
-                }
+                var bytesPerValue = GetNumberOfBytesPerPixelComponent(highestComponentValue);
 
                 var readCount = width * componentCount;
                 var ret = new List<BigInteger>();
@@ -258,14 +265,13 @@ namespace RavuAlHemio.PbmNet
                 return ret;
             }
 
-            public NetpbmImage<BigInteger> MakeImage(int width, int height, BigInteger highestComponentValue, IEnumerable<Component> components,
-                IEnumerable<IEnumerable<BigInteger>> pixelData)
+            public NetpbmImage<BigInteger> MakeImage(NetpbmHeader<BigInteger> header, IEnumerable<IEnumerable<BigInteger>> pixelData)
             {
                 Exception exception;
 
                 try
                 {
-                    return new NetpbmImageBigInteger(width, height, highestComponentValue, components, pixelData);
+                    return new NetpbmImageBigInteger(header, pixelData);
                 }
                 catch (ArgumentOutOfRangeException exc)
                 {
@@ -277,6 +283,20 @@ namespace RavuAlHemio.PbmNet
                 }
 
                 throw new InvalidDataException("invalid image format", exception);
+            }
+
+            public int GetNumberOfBytesPerPixelComponent(BigInteger highestComponentValue)
+            {
+                // find how many bytes each value needs
+                var highestBytes = highestComponentValue.ToByteArray();
+                var bytesPerValue = highestBytes.Length;
+                if (highestBytes[highestBytes.Length - 1] == 0)
+                {
+                    // additional byte to ensure number is positive
+                    // the file's encoding doesn't use this
+                    --bytesPerValue;
+                }
+                return bytesPerValue;
             }
         }
     }

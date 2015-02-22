@@ -23,7 +23,7 @@ namespace RavuAlHemio.PbmNet
             // big PAM is always supported
             var types = new HashSet<ImageType> {ImageType.BigPAM};
 
-            if (img.BytesPerPixelComponent > 2)
+            if (img.Header.BytesPerPixelComponent > 2)
             {
                 // all other formats limit pixel values to two bytes per component
                 return types;
@@ -34,10 +34,10 @@ namespace RavuAlHemio.PbmNet
 
             // PPM requires RGB
             if (
-                img.Components.Count == 3 &&
-                img.Components[0] == Component.Red &&
-                img.Components[1] == Component.Green &&
-                img.Components[2] == Component.Blue
+                img.Header.Components.Count == 3 &&
+                img.Header.Components[0] == Component.Red &&
+                img.Header.Components[1] == Component.Green &&
+                img.Header.Components[2] == Component.Blue
             )
             {
                 types.Add(ImageType.PPM);
@@ -46,23 +46,12 @@ namespace RavuAlHemio.PbmNet
 
             // PGM requires grayscale (black-to-white)
             if (
-                img.Components.Count == 1 &&
-                img.Components[0] == Component.White
+                img.Header.Components.Count == 1 &&
+                img.Header.Components[0] == Component.White
             )
             {
                 types.Add(ImageType.PGM);
                 types.Add(ImageType.PlainPGM);
-            }
-
-            // PBM requires a bitmap (white-to-black)
-            if (
-                img.IsBitmap &&
-                img.Components.Count == 1 &&
-                img.Components[0] == Component.Black
-            )
-            {
-                types.Add(ImageType.PBM);
-                types.Add(ImageType.PlainPBM);
             }
 
             return types;
@@ -76,65 +65,57 @@ namespace RavuAlHemio.PbmNet
         protected virtual string GetPamTupleType<TPixelComponent>(NetpbmImage<TPixelComponent> image)
         {
             if (
-                image.IsBitmap &&
-                image.Components.Count == 1 &&
-                image.Components[0] == Component.Black
-            )
-            {
-                return "BLACKANDWHITE";
-            }
-            else if (
-                image.Components.Count == 1 &&
-                image.Components[0] == Component.White
+                image.Header.Components.Count == 1 &&
+                image.Header.Components[0] == Component.White
             )
             {
                 return "GRAYSCALE";
             }
             else if (
-                image.Components.Count == 2 &&
-                image.Components[0] == Component.White &&
-                image.Components[1] == Component.Alpha
+                image.Header.Components.Count == 2 &&
+                image.Header.Components[0] == Component.White &&
+                image.Header.Components[1] == Component.Alpha
             )
             {
                 return "GRAYSCALE_ALPHA";
             }
             else if (
-                image.Components.Count == 3 &&
-                image.Components[0] == Component.Red &&
-                image.Components[1] == Component.Green &&
-                image.Components[2] == Component.Blue
+                image.Header.Components.Count == 3 &&
+                image.Header.Components[0] == Component.Red &&
+                image.Header.Components[1] == Component.Green &&
+                image.Header.Components[2] == Component.Blue
             )
             {
                 return "RGB";
             }
             else if (
-                image.Components.Count == 4 &&
-                image.Components[0] == Component.Red &&
-                image.Components[1] == Component.Green &&
-                image.Components[2] == Component.Blue &&
-                image.Components[3] == Component.Alpha
+                image.Header.Components.Count == 4 &&
+                image.Header.Components[0] == Component.Red &&
+                image.Header.Components[1] == Component.Green &&
+                image.Header.Components[2] == Component.Blue &&
+                image.Header.Components[3] == Component.Alpha
             )
             {
                 return "RGB_ALPHA";
             }
             else if (
-                image.Components.Count == 4 &&
-                image.Components[0] == Component.Cyan &&
-                image.Components[1] == Component.Magenta &&
-                image.Components[2] == Component.Yellow &&
-                image.Components[3] == Component.Black
+                image.Header.Components.Count == 4 &&
+                image.Header.Components[0] == Component.Cyan &&
+                image.Header.Components[1] == Component.Magenta &&
+                image.Header.Components[2] == Component.Yellow &&
+                image.Header.Components[3] == Component.Black
             )
             {
                 // "CMYK" is an extension (compatible with GhostScript)
                 return "CMYK";
             }
             else if (
-                image.Components.Count == 5 &&
-                image.Components[0] == Component.Cyan &&
-                image.Components[1] == Component.Magenta &&
-                image.Components[2] == Component.Yellow &&
-                image.Components[3] == Component.Black &&
-                image.Components[4] == Component.Alpha
+                image.Header.Components.Count == 5 &&
+                image.Header.Components[0] == Component.Cyan &&
+                image.Header.Components[1] == Component.Magenta &&
+                image.Header.Components[2] == Component.Yellow &&
+                image.Header.Components[3] == Component.Black &&
+                image.Header.Components[4] == Component.Alpha
             )
             {
                 // "CMYK_ALPHA" is an extension
@@ -143,7 +124,7 @@ namespace RavuAlHemio.PbmNet
             else
             {
                 // extension: assemble a custom tuple type
-                return string.Join("_", image.Components.Select(c => c.ToString().ToUpperInvariant()));
+                return string.Join("_", image.Header.Components.Select(c => c.ToString().ToUpperInvariant()));
             }
         }
 
@@ -218,16 +199,16 @@ namespace RavuAlHemio.PbmNet
                 if (type == ImageType.PAM || type == ImageType.BigPAM)
                 {
                     // output width line
-                    writer.WriteUnprefixed("WIDTH {0}\n", image.Width);
+                    writer.WriteUnprefixed("WIDTH {0}\n", image.Header.Width);
 
                     // output height line
-                    writer.WriteUnprefixed("HEIGHT {0}\n", image.Height);
+                    writer.WriteUnprefixed("HEIGHT {0}\n", image.Header.Height);
 
                     // output number of components
-                    writer.WriteUnprefixed("DEPTH {0}\n", image.Components.Count);
+                    writer.WriteUnprefixed("DEPTH {0}\n", image.Header.Components.Count);
 
                     // maximum value
-                    writer.WriteUnprefixed("MAXVAL {0}\n", image.HighestComponentValue);
+                    writer.WriteUnprefixed("MAXVAL {0}\n", image.Header.HighestComponentValue);
 
                     // find the components we are working with
                     writer.WriteUnprefixed("TUPLTYPE {0}\n", GetPamTupleType(image));
@@ -237,13 +218,13 @@ namespace RavuAlHemio.PbmNet
                 else
                 {
                     // output width and height
-                    writer.WriteUnprefixed("{0} {1}\n", image.Width, image.Height);
+                    writer.WriteUnprefixed("{0} {1}\n", image.Header.Width, image.Header.Height);
 
                     // unless PBM (where the max value is always 1)
                     if (type != ImageType.PBM && type != ImageType.PlainPBM)
                     {
                         // output the max value
-                        writer.WriteUnprefixed("{0}\n", image.HighestComponentValue);
+                        writer.WriteUnprefixed("{0}\n", image.Header.HighestComponentValue);
                     }
 
                     // the header's final newline
@@ -255,9 +236,9 @@ namespace RavuAlHemio.PbmNet
                     // output in row-major order as decimal numbers
                     // add newlines after each row to make things nicer
 
-                    for (int r = 0; r < image.Height; ++r)
+                    foreach (var row in image.NativeRows)
                     {
-                        foreach (var value in image.NativeRows[r])
+                        foreach (var value in row)
                         {
                             writer.WriteUnprefixed(value.ToString());
                             writer.Write(' ');
@@ -269,9 +250,9 @@ namespace RavuAlHemio.PbmNet
                 {
                     // special case: bit-packed format!
                     var values = new List<TPixelComponent>(8);
-                    for (int r = 0; r < image.Height; ++r)
+                    foreach (var row in image.NativeRows)
                     {
-                        foreach (var value in image.NativeRows[r])
+                        foreach (var value in row)
                         {
                             values.Add(value);
 
@@ -293,9 +274,9 @@ namespace RavuAlHemio.PbmNet
                 else
                 {
                     // just the big endian bytes
-                    for (int r = 0; r < image.Height; ++r)
+                    foreach (var row in image.NativeRows)
                     {
-                        foreach (var value in image.NativeRows[r])
+                        foreach (var value in row)
                         {
                             writer.Write(image.ComponentToBigEndianBytes(value).ToArray());
                         }

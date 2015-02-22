@@ -7,33 +7,19 @@ namespace RavuAlHemio.PbmNet
     /// </summary>
     public class NetpbmImage32 : NetpbmImage<uint>
     {
-        public NetpbmImage32(int width, int height, uint highestComponentValue, IEnumerable<Component> components,
-            IEnumerable<IEnumerable<uint>> pixelData)
-            : base(width, height, highestComponentValue, components, pixelData)
+        public NetpbmImage32(NetpbmHeader<uint> header, IEnumerable<IEnumerable<uint>> pixelData)
+            : base(header, pixelData)
         {
         }
 
         protected override bool IsPixelComponentInRange(uint component)
         {
-            return component <= HighestComponentValue;
-        }
-
-        public override int BytesPerPixelComponent
-        {
-            get { return 4; }
+            return component <= Header.HighestComponentValue;
         }
 
         public override double ScalePixelComponent(uint pixelComponent)
         {
-            return pixelComponent / (double)HighestComponentValue;
-        }
-
-        public override bool IsBitmap
-        {
-            get
-            {
-                return HighestComponentValue == 1;
-            }
+            return pixelComponent / (double)Header.HighestComponentValue;
         }
 
         internal override IEnumerable<byte> ComponentToBigEndianBytes(uint pixelComponent)
@@ -46,7 +32,7 @@ namespace RavuAlHemio.PbmNet
 
         internal override uint InvertPixelValue(uint pixelComponent)
         {
-            return HighestComponentValue - pixelComponent;
+            return Header.HighestComponentValue - pixelComponent;
         }
 
         internal override bool IsComponentValueZero(uint componentValue)
@@ -54,10 +40,10 @@ namespace RavuAlHemio.PbmNet
             return (componentValue == 0);
         }
 
-        public override NetpbmImage<uint> NewImageOfSameType(int width, int height, uint highestComponentValue, IEnumerable<Component> components,
+        public override NetpbmImage<uint> NewImageOfSameType(NetpbmHeader<uint> header,
             IEnumerable<IEnumerable<uint>> pixelData)
         {
-            return new NetpbmImage32(width, height, highestComponentValue, components, pixelData);
+            return new NetpbmImage32(header, pixelData);
         }
     }
 }

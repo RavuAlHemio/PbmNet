@@ -30,6 +30,13 @@ namespace RavuAlHemio.PbmNet
         TPixelComponent ParseHighestComponentValue(string highestComponentValueString);
 
         /// <summary>
+        /// Returns the number of bytes per pixel component for the given highest component value.
+        /// </summary>
+        /// <returns>The number of bytes per pixel component.</returns>
+        /// <param name="highestComponentValue">The highest value a pixel component may have in the image.</param>
+        int GetNumberOfBytesPerPixelComponent(TPixelComponent highestComponentValue);
+
+        /// <summary>
         /// Parses a component value from a string of decimal digits.
         /// </summary>
         /// <returns>The component value.</returns>
@@ -53,14 +60,11 @@ namespace RavuAlHemio.PbmNet
         /// <summary>
         /// Creates a new image.
         /// </summary>
-        /// <param name="width">The width of the image.</param>
-        /// <param name="height">The height of the image.</param>
-        /// <param name="highestComponentValue">The highest value for a pixel component.</param>
-        /// <param name="components">The components making up this image.</param>
+        /// <param name="header">The header of the image.</param>
         /// <param name="pixelData">The pixel data rows.</param>
         /// <returns>The new image.</returns>
         /// <exception cref="InvalidDataException">Thrown if the data passed to this method is invalid.</exception>
-        NetpbmImage<TPixelComponent> MakeImage(int width, int height, TPixelComponent highestComponentValue,
-            IEnumerable<Component> components, IEnumerable<IEnumerable<TPixelComponent>> pixelData);
+        NetpbmImage<TPixelComponent> MakeImage(NetpbmHeader<TPixelComponent> header,
+            IEnumerable<IEnumerable<TPixelComponent>> pixelData);
     }
 }

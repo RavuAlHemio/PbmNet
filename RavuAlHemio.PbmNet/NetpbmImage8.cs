@@ -8,33 +8,19 @@ namespace RavuAlHemio.PbmNet
     /// </summary>
     public class NetpbmImage8 : NetpbmImage<byte>
     {
-        public NetpbmImage8(int width, int height, byte highestComponentValue, IEnumerable<Component> components,
-            IEnumerable<IEnumerable<byte>> pixelData)
-            : base(width, height, highestComponentValue, components, pixelData)
+        public NetpbmImage8(NetpbmHeader<byte> header, IEnumerable<IEnumerable<byte>> pixelData)
+            : base(header, pixelData)
         {
         }
 
         protected override bool IsPixelComponentInRange(byte component)
         {
-            return component <= HighestComponentValue;
-        }
-
-        public override int BytesPerPixelComponent
-        {
-            get { return 1; }
+            return component <= Header.HighestComponentValue;
         }
 
         public override double ScalePixelComponent(byte pixelComponent)
         {
-            return pixelComponent / (double)HighestComponentValue;
-        }
-
-        public override bool IsBitmap
-        {
-            get
-            {
-                return HighestComponentValue == 1;
-            }
+            return pixelComponent / (double)Header.HighestComponentValue;
         }
 
         internal override IEnumerable<byte> ComponentToBigEndianBytes(byte pixelComponent)
@@ -44,7 +30,7 @@ namespace RavuAlHemio.PbmNet
 
         internal override byte InvertPixelValue(byte pixelComponent)
         {
-            return (byte)(HighestComponentValue - pixelComponent);
+            return (byte)(Header.HighestComponentValue - pixelComponent);
         }
 
         internal override bool IsComponentValueZero(byte componentValue)
@@ -52,10 +38,10 @@ namespace RavuAlHemio.PbmNet
             return (componentValue == 0);
         }
 
-        public override NetpbmImage<byte> NewImageOfSameType(int width, int height, byte highestComponentValue, IEnumerable<Component> components,
+        public override NetpbmImage<byte> NewImageOfSameType(NetpbmHeader<byte> header,
             IEnumerable<IEnumerable<byte>> pixelData)
         {
-            return new NetpbmImage8(width, height, highestComponentValue, components, pixelData);
+            return new NetpbmImage8(header, pixelData);
         }
     }
 }

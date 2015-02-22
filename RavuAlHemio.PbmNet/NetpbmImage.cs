@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 
 namespace RavuAlHemio.PbmNet
@@ -11,43 +12,19 @@ namespace RavuAlHemio.PbmNet
     /// </summary>
     public abstract class NetpbmImage<TPixelComponent>
     {
-		/// <summary>
-		/// The width of the image, in pixels.
-		/// </summary>
-        public int Width { get; private set; }
+        private bool _loaded;
 
-		/// <summary>
-		/// The height of the image, in pixels.
-		/// </summary>
-        public int Height { get; private set; }
-
-		/// <summary>
-		/// The number of bytes used per pixel-component.
-		/// </summary>
-        public abstract int BytesPerPixelComponent { get; }
-
-		/// <summary>
-		/// The list of the types of components in this image.
-		/// </summary>
-        public IList<Component> Components { get; private set; }
+        /// <summary>
+        /// The header containing the image's metadata.
+        /// </summary>
+        public NetpbmHeader<TPixelComponent> Header { get; private set; }
 
         /// <summary>
         /// The actual rows of the image; drill down from rows to pixels. Each pixel is represented as a sequence of
 		/// components within the row; therefore, each row has <see cref="Width"/> times <see cref="Components"/>.Count
 		/// elements.
         /// </summary>
-        protected IList<IList<TPixelComponent>> Rows { get; set; }
-
-        /// <summary>
-        /// The largest possible value of a pixel component. (The lowest possible value is always <value>0</value>.)
-        /// </summary>
-        public TPixelComponent HighestComponentValue { get; protected set; }
-
-        /// <summary>
-        /// Stores whether this image is a bitmap (only allows two values per pixel component).
-        /// </summary>
-        /// <value><c>true</c> if this image is a bitmap; otherwise, <c>false</c>.</value>
-        public abstract bool IsBitmap { get; }
+        protected IEnumerable<IEnumerable<TPixelComponent>> Rows { get; set; }
 
         /// <summary>
         /// Scales a pixel into the interval [<value>0.0</value>, <value>1.0</value>].
@@ -86,19 +63,19 @@ namespace RavuAlHemio.PbmNet
         /// <see cref="HighestComponentValue"/>].</returns>
         public IList<TPixelComponent> GetNativePixel(int x, int y)
         {
-            if (x < 0 || x >= Width)
+            if (x < 0 || x >= Header.Width)
             {
                 throw new ArgumentOutOfRangeException("x", x,
-                    string.Format("x ({0}) must be at least 0 and less than the width of the image ({1})", x, Width));
+                    string.Format("x ({0}) must be at least 0 and less than the width of the image ({1})", x, Header.Width));
             }
-            if (y < 0 || y >= Height)
+            if (y < 0 || y >= Header.Height)
             {
                 throw new ArgumentOutOfRangeException("y", y,
-                    string.Format("y ({0}) must be at least 0 and less than the height of the image ({1})", y, Height));
+                    string.Format("y ({0}) must be at least 0 and less than the height of the image ({1})", y, Header.Height));
             }
-            var retArray = Rows[y].Skip(x * Components.Count).Take(Components.Count).ToArray();
+            var retArray = Rows.Skip(y).First().Skip(x * Header.Components.Count).Take(Header.Components.Count).ToArray();
             var ret = new ReadOnlyCollection<TPixelComponent>(retArray);
-            Contract.Ensures(ret.Count == Components.Count);
+            Contract.Ensures(ret.Count == Header.Components.Count);
             Contract.Ensures(ret.All(IsPixelComponentInRange));
             return ret;
         }
@@ -115,21 +92,41 @@ namespace RavuAlHemio.PbmNet
         {
             var retArray = GetNativePixel(x, y).Select(ScalePixelComponent).ToArray();
             var ret = new ReadOnlyCollection<double>(retArray);
-            Contract.Ensures(ret.Count == Components.Count);
+            Contract.Ensures(ret.Count == Header.Components.Count);
             Contract.Ensures(ret.All(component => component >= 0.0 && component <= 1.0));
             return ret;
         }
 
         /// <summary>
-        /// Obtains a list of rows, with their pixel values as a contiguous list of component values for each pixel in
-        /// pixel-major order, e.g. <c>RGBRGBRGB</c>.
+        /// Obtains an enumerable of rows, with their pixel values as a contiguous enumerable of component values for
+        /// each pixel in pixel-major order, e.g. <c>RGBRGBRGB</c>.
         /// </summary>
         /// <value>The list of rows.</value>
-        public IList<IList<TPixelComponent>> NativeRows
+        public IEnumerable<IEnumerable<TPixelComponent>> NativeRows
         {
             get
             {
-                var retRows = Rows.Select(r => (IList<TPixelComponent>)new ReadOnlyCollection<TPixelComponent>(r)).ToList();
+                var retRows = Rows.Select(r => (IList<TPixelComponent>)new List<TPixelComponent>(r)).ToList();
+                return new ReadOnlyCollection<IList<TPixelComponent>>(retRows);
+            }
+        }
+
+        /// <summary>
+        /// If the image has been loaded using <see cref="LoadData"/>, obtains a list of rows, with their pixel values
+        /// as a contiguous list of component values for each pixel in pixel-major order, e.g. <c>RGBRGBRGB</c>. If the
+        /// image has not been loaded, returns <c>null</c>.
+        /// </summary>
+        /// <value>The list of rows, or <c>null</c>.</value>
+        public IEnumerable<IEnumerable<TPixelComponent>> LoadedNativeRows
+        {
+            get
+            {
+                if (!_loaded)
+                {
+                    return null;
+                }
+
+                var retRows = Rows.Select(r => (IList<TPixelComponent>)new ReadOnlyCollection<TPixelComponent>((IList<TPixelComponent>)r)).ToList();
                 return new ReadOnlyCollection<IList<TPixelComponent>>(retRows);
             }
         }
@@ -145,87 +142,79 @@ namespace RavuAlHemio.PbmNet
         /// <summary>
         /// Creates and returns a new image of the same type as this image.
         /// </summary>
-        /// <param name="width">Width of the image.</param>
-        /// <param name="height">Height of the image.</param>
-        /// <param name="highestComponentValue">The highest value a pixel component may have.</param>
-        /// <param name="components">The components of the image.</param>
+        /// <param name="header">The header of the new image.</param>
         /// <param name="pixelData">The actual pixel data of the image. Drill down rows to pixels, with the pixels
         /// represented as a contiguous sequence of component values for each pixel (in pixel-major order, e.g.
         /// <c>RGBRGBRGB</c>.</param>
         /// <returns>The new image.</returns>
-        public abstract NetpbmImage<TPixelComponent> NewImageOfSameType(int width, int height,
-            TPixelComponent highestComponentValue, IEnumerable<Component> components,
+        public abstract NetpbmImage<TPixelComponent> NewImageOfSameType(NetpbmHeader<TPixelComponent> header,
             IEnumerable<IEnumerable<TPixelComponent>> pixelData);
 
         /// <summary>
         /// Initializes a new Netpbm image.
         /// </summary>
-        /// <param name="width">Width of the image.</param>
-        /// <param name="height">Height of the image.</param>
-        /// <param name="highestComponentValue">The highest value a pixel component may have.</param>
-        /// <param name="components">The components of the image.</param>
+        /// <param name="header">The header of the image, containing all necessary information.</param>
         /// <param name="pixelData">The actual pixel data of the image. Drill down rows to pixels, with the pixels
         /// represented as a contiguous sequence of component values for each pixel (in pixel-major order, e.g.
-        /// <c>RGBRGBRGB</c>.</param>
-        protected NetpbmImage(int width, int height, TPixelComponent highestComponentValue,
-			IEnumerable<Component> components, IEnumerable<IEnumerable<TPixelComponent>> pixelData)
+        /// <c>RGBRGBRGB</c>. The data passed to this constructor must not be modified after the constructor
+        /// completes, unless <see cref="LoadData"/> is called.</param>
+        protected NetpbmImage(NetpbmHeader<TPixelComponent> header, IEnumerable<IEnumerable<TPixelComponent>> pixelData)
         {
-            if (width < 1)
-            {
-                throw new ArgumentOutOfRangeException("width", width, "width must be at least 1");
-            }
-            if (height < 1)
-            {
-                throw new ArgumentOutOfRangeException("height", height, "height must be at least 1");
-            }
+            Header = header;
+            Rows = pixelData;
+            _loaded = false;
+        }
 
-            Width = width;
-            Height = height;
-            HighestComponentValue = highestComponentValue;
-            Components = new List<Component>(components);
-
-            Rows = new List<IList<TPixelComponent>>(Height);
-            foreach (var row in pixelData)
+        /// <summary>
+        /// Performs an immediate load of the image data, creating a copy of the pixel data passed to the constructor.
+        /// </summary>
+        public void LoadData()
+        {
+            // collapses the IEnumerable<IEnumerable> into a List<List>
+            var myRows = new List<IList<TPixelComponent>>(Header.Height);
+            foreach (var row in Rows)
             {
-				var rowPixels = new List<TPixelComponent>(row);
-				if (rowPixels.Count != Width * Components.Count)
-				{
-                    throw new ArgumentOutOfRangeException("pixelData",
+                var rowPixels = new List<TPixelComponent>(row);
+                if (rowPixels.Count != Header.Width * Header.Components.Count)
+                {
+                    throw new InvalidDataException(
                         string.Format("row {0} must have {1} values ({2} pixels times {3} components) but only has {4}",
-                            Rows.Count, Width * Components.Count, Width, Components.Count, rowPixels.Count));
-				}
+                            myRows.Count, Header.Width * Header.Components.Count, Header.Width, Header.Components.Count, rowPixels.Count));
+                }
 
                 var badPixel = rowPixels.FindIndex(c => !IsPixelComponentInRange(c));
                 if (badPixel != -1)
                 {
-                    throw new ArgumentOutOfRangeException("pixelData",
+                    throw new InvalidDataException(
                         string.Format("row {0} pixel {1} component {2} must have a value between 0 and {3} (has {4})",
-                            Rows.Count, badPixel / Components.Count, badPixel % Components.Count, HighestComponentValue,
-                            rowPixels[badPixel]));
+                            myRows.Count, badPixel / Header.Components.Count, badPixel % Header.Components.Count,
+                            Header.HighestComponentValue, rowPixels[badPixel]));
                 }
 
-                Rows.Add(rowPixels);
-                if (Rows.Count > Height)
+                myRows.Add(rowPixels);
+                if (myRows.Count > Header.Height)
                 {
-                    throw new ArgumentOutOfRangeException("pixelData",
-                        string.Format("image has at least {0} rows, must have {1}", Rows.Count, height));
+                    throw new InvalidDataException(
+                        string.Format("image has at least {0} rows, must have {1}", myRows.Count, Header.Height));
                 }
             }
-            if (Rows.Count != Height)
+            if (myRows.Count != Header.Height)
             {
-                throw new ArgumentOutOfRangeException("pixelData",
-                        string.Format("image has {0} rows, must have {1}", Rows.Count, height));
+                throw new InvalidDataException(
+                    string.Format("image has {0} rows, must have {1}", myRows.Count, Header.Height));
             }
+            Rows = myRows;
+            _loaded = true;
         }
 
         [ContractInvariantMethod]
         protected void ObjectInvariant()
         {
-            Contract.Invariant(Width > 0);
-            Contract.Invariant(Height > 0);
-            Contract.Invariant(BytesPerPixelComponent > 0);
-            Contract.Invariant(Rows.Count == Height);
-            Contract.Invariant(Rows.All(row => row.Count == Width * Components.Count));
+            Contract.Invariant(Header.Width > 0);
+            Contract.Invariant(Header.Height > 0);
+            Contract.Invariant(Header.BytesPerPixelComponent > 0);
+            Contract.Invariant(Rows.Count() == Header.Height);
+            Contract.Invariant(Rows.All(row => row.Count() == Header.Width * Header.Components.Count));
             Contract.Invariant(Rows.All(row => row.All(IsPixelComponentInRange)));
         }
     }

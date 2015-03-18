@@ -160,8 +160,21 @@ namespace RavuAlHemio.PbmNet
         /// <param name="image">The image to write.</param>
         /// <param name="stream">The stream into which to write the image.</param>
         /// <param name="type">The type of Netpbm image into which to encode the image.</param>
-        /// <typeparam name="TPixelComponent">The 1st type parameter.</typeparam>
+        /// <typeparam name="TPixelComponent">The type of pixel component values.</typeparam>
         public void WriteImage<TPixelComponent>(NetpbmImage<TPixelComponent> image, Stream stream, ImageType type)
+        {
+            WriteImageHeader(image, stream, type);
+            WriteImageData(image, stream, type);
+        }
+
+        /// <summary>
+        /// Writes the image header into the stream in the given format.
+        /// </summary>
+        /// <param name="image">The image whose header to write.</param>
+        /// <param name="stream">The stream into which to write the header.</param>
+        /// <param name="type">The type of Netpbm image according to which to encode the header.</param>
+        /// <typeparam name="TPixelComponent">The type of pixel component values.</typeparam>
+        public void WriteImageHeader<TPixelComponent>(NetpbmImage<TPixelComponent> image, Stream stream, ImageType type)
         {
             // check if the format is supported
             var supportedTypes = SupportedTypesForImage(image);
@@ -170,21 +183,18 @@ namespace RavuAlHemio.PbmNet
                 throw new ArgumentOutOfRangeException("type", type, "the image cannot be encoded into this type");
             }
 
-            using (var writer = new NetpbmBinaryWriter(stream, new UTF8Encoding(false, true)))
+            using (var writer = new NetpbmBinaryWriter(stream, new UTF8Encoding(false, true), leaveOpen: true))
             {
                 int magicNumber = (int)type;
-                bool isPlain = false;
                 switch (type)
                 {
                     case ImageType.PBM:
                     case ImageType.PGM:
                     case ImageType.PPM:
                     case ImageType.PAM:
-                        break;
                     case ImageType.PlainPBM:
                     case ImageType.PlainPGM:
                     case ImageType.PlainPPM:
-                        isPlain = true;
                         break;
                     case ImageType.BigPAM:
                         magicNumber = (int)ImageType.PAM;
@@ -229,6 +239,45 @@ namespace RavuAlHemio.PbmNet
 
                     // the header's final newline
                     writer.Write('\n');
+                }
+            }
+        }
+
+        /// <summary>
+        /// Writes the image data into the stream in the given format.
+        /// </summary>
+        /// <param name="image">The image whose data to write.</param>
+        /// <param name="stream">The stream into which to write the data.</param>
+        /// <param name="type">The type of Netpbm image according to which to encode the data.</param>
+        /// <typeparam name="TPixelComponent">The type of pixel component values.</typeparam>
+        public void WriteImageData<TPixelComponent>(NetpbmImage<TPixelComponent> image, Stream stream, ImageType type)
+        {
+            // check if the format is supported
+            var supportedTypes = SupportedTypesForImage(image);
+            if (!supportedTypes.Contains(type))
+            {
+                throw new ArgumentOutOfRangeException("type", type, "the image cannot be encoded into this type");
+            }
+
+            using (var writer = new NetpbmBinaryWriter(stream, new UTF8Encoding(false, true), leaveOpen: true))
+            {
+                bool isPlain;
+                switch (type)
+                {
+                    case ImageType.PBM:
+                    case ImageType.PGM:
+                    case ImageType.PPM:
+                    case ImageType.PAM:
+                    case ImageType.BigPAM:
+                        isPlain = false;
+                        break;
+                    case ImageType.PlainPBM:
+                    case ImageType.PlainPGM:
+                    case ImageType.PlainPPM:
+                        isPlain = true;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("type", type, "unknown image type");
                 }
 
                 if (isPlain)

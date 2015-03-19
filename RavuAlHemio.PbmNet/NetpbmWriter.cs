@@ -20,10 +20,21 @@ namespace RavuAlHemio.PbmNet
         /// <typeparam name="TPixelComponent">The pixel component type of the image.</typeparam>
         public ISet<ImageType> SupportedTypesForImage<TPixelComponent>(NetpbmImage<TPixelComponent> img)
         {
+            return SupportedTypesForHeader(img.Header);
+        }
+
+        /// <summary>
+        /// Returns the set of Netpbm image types into which the image with the given header can be encoded.
+        /// </summary>
+        /// <returns>The Netpbm image types an image with the given header can be encoded into.</returns>
+        /// <param name="header">The header of the image to be encoded.</param>
+        /// <typeparam name="TPixelComponent">The pixel component type of the image.</typeparam>
+        public ISet<ImageType> SupportedTypesForHeader<TPixelComponent>(NetpbmHeader<TPixelComponent> header)
+        {
             // big PAM is always supported
             var types = new HashSet<ImageType> {ImageType.BigPAM};
 
-            if (img.Header.BytesPerPixelComponent > 2)
+            if (header.BytesPerPixelComponent > 2)
             {
                 // all other formats limit pixel values to two bytes per component
                 return types;
@@ -34,10 +45,10 @@ namespace RavuAlHemio.PbmNet
 
             // PPM requires RGB
             if (
-                img.Header.Components.Count == 3 &&
-                img.Header.Components[0] == Component.Red &&
-                img.Header.Components[1] == Component.Green &&
-                img.Header.Components[2] == Component.Blue
+                header.Components.Count == 3 &&
+                header.Components[0] == Component.Red &&
+                header.Components[1] == Component.Green &&
+                header.Components[2] == Component.Blue
             )
             {
                 types.Add(ImageType.PPM);
@@ -46,8 +57,8 @@ namespace RavuAlHemio.PbmNet
 
             // PGM requires grayscale (black-to-white)
             if (
-                img.Header.Components.Count == 1 &&
-                img.Header.Components[0] == Component.White
+                header.Components.Count == 1 &&
+                header.Components[0] == Component.White
             )
             {
                 types.Add(ImageType.PGM);
@@ -58,64 +69,64 @@ namespace RavuAlHemio.PbmNet
         }
 
         /// <summary>
-        /// Returns the PAM tuple name and necessary component permutation for the given image.
+        /// Returns the PAM tuple name and necessary component permutation for images with the given header.
         /// </summary>
-        /// <param name="image">The image.</param>
+        /// <param name="header">The header.</param>
         /// <typeparam name="TPixelComponent">The pixel component type.</typeparam>
-        protected virtual string GetPamTupleType<TPixelComponent>(NetpbmImage<TPixelComponent> image)
+        protected virtual string GetPamTupleType<TPixelComponent>(NetpbmHeader<TPixelComponent> header)
         {
             if (
-                image.Header.Components.Count == 1 &&
-                image.Header.Components[0] == Component.White
+                header.Components.Count == 1 &&
+                header.Components[0] == Component.White
             )
             {
                 return "GRAYSCALE";
             }
             else if (
-                image.Header.Components.Count == 2 &&
-                image.Header.Components[0] == Component.White &&
-                image.Header.Components[1] == Component.Alpha
+                header.Components.Count == 2 &&
+                header.Components[0] == Component.White &&
+                header.Components[1] == Component.Alpha
             )
             {
                 return "GRAYSCALE_ALPHA";
             }
             else if (
-                image.Header.Components.Count == 3 &&
-                image.Header.Components[0] == Component.Red &&
-                image.Header.Components[1] == Component.Green &&
-                image.Header.Components[2] == Component.Blue
+                header.Components.Count == 3 &&
+                header.Components[0] == Component.Red &&
+                header.Components[1] == Component.Green &&
+                header.Components[2] == Component.Blue
             )
             {
                 return "RGB";
             }
             else if (
-                image.Header.Components.Count == 4 &&
-                image.Header.Components[0] == Component.Red &&
-                image.Header.Components[1] == Component.Green &&
-                image.Header.Components[2] == Component.Blue &&
-                image.Header.Components[3] == Component.Alpha
+                header.Components.Count == 4 &&
+                header.Components[0] == Component.Red &&
+                header.Components[1] == Component.Green &&
+                header.Components[2] == Component.Blue &&
+                header.Components[3] == Component.Alpha
             )
             {
                 return "RGB_ALPHA";
             }
             else if (
-                image.Header.Components.Count == 4 &&
-                image.Header.Components[0] == Component.Cyan &&
-                image.Header.Components[1] == Component.Magenta &&
-                image.Header.Components[2] == Component.Yellow &&
-                image.Header.Components[3] == Component.Black
+                header.Components.Count == 4 &&
+                header.Components[0] == Component.Cyan &&
+                header.Components[1] == Component.Magenta &&
+                header.Components[2] == Component.Yellow &&
+                header.Components[3] == Component.Black
             )
             {
                 // "CMYK" is an extension (compatible with GhostScript)
                 return "CMYK";
             }
             else if (
-                image.Header.Components.Count == 5 &&
-                image.Header.Components[0] == Component.Cyan &&
-                image.Header.Components[1] == Component.Magenta &&
-                image.Header.Components[2] == Component.Yellow &&
-                image.Header.Components[3] == Component.Black &&
-                image.Header.Components[4] == Component.Alpha
+                header.Components.Count == 5 &&
+                header.Components[0] == Component.Cyan &&
+                header.Components[1] == Component.Magenta &&
+                header.Components[2] == Component.Yellow &&
+                header.Components[3] == Component.Black &&
+                header.Components[4] == Component.Alpha
             )
             {
                 // "CMYK_ALPHA" is an extension
@@ -124,7 +135,7 @@ namespace RavuAlHemio.PbmNet
             else
             {
                 // extension: assemble a custom tuple type
-                return string.Join("_", image.Header.Components.Select(c => c.ToString().ToUpperInvariant()));
+                return string.Join("_", header.Components.Select(c => c.ToString().ToUpperInvariant()));
             }
         }
 
@@ -163,21 +174,21 @@ namespace RavuAlHemio.PbmNet
         /// <typeparam name="TPixelComponent">The type of pixel component values.</typeparam>
         public void WriteImage<TPixelComponent>(NetpbmImage<TPixelComponent> image, Stream stream, ImageType type)
         {
-            WriteImageHeader(image, stream, type);
+            WriteImageHeader(image.Header, stream, type);
             WriteImageData(image, stream, type);
         }
 
         /// <summary>
         /// Writes the image header into the stream in the given format.
         /// </summary>
-        /// <param name="image">The image whose header to write.</param>
+        /// <param name="header">The image header to write.</param>
         /// <param name="stream">The stream into which to write the header.</param>
         /// <param name="type">The type of Netpbm image according to which to encode the header.</param>
         /// <typeparam name="TPixelComponent">The type of pixel component values.</typeparam>
-        public void WriteImageHeader<TPixelComponent>(NetpbmImage<TPixelComponent> image, Stream stream, ImageType type)
+        public void WriteImageHeader<TPixelComponent>(NetpbmHeader<TPixelComponent> header, Stream stream, ImageType type)
         {
             // check if the format is supported
-            var supportedTypes = SupportedTypesForImage(image);
+            var supportedTypes = SupportedTypesForHeader(header);
             if (!supportedTypes.Contains(type))
             {
                 throw new ArgumentOutOfRangeException("type", type, "the image cannot be encoded into this type");
@@ -209,32 +220,32 @@ namespace RavuAlHemio.PbmNet
                 if (type == ImageType.PAM || type == ImageType.BigPAM)
                 {
                     // output width line
-                    writer.WriteUnprefixed("WIDTH {0}\n", image.Header.Width);
+                    writer.WriteUnprefixed("WIDTH {0}\n", header.Width);
 
                     // output height line
-                    writer.WriteUnprefixed("HEIGHT {0}\n", image.Header.Height);
+                    writer.WriteUnprefixed("HEIGHT {0}\n", header.Height);
 
                     // output number of components
-                    writer.WriteUnprefixed("DEPTH {0}\n", image.Header.Components.Count);
+                    writer.WriteUnprefixed("DEPTH {0}\n", header.Components.Count);
 
                     // maximum value
-                    writer.WriteUnprefixed("MAXVAL {0}\n", image.Header.HighestComponentValue);
+                    writer.WriteUnprefixed("MAXVAL {0}\n", header.HighestComponentValue);
 
                     // find the components we are working with
-                    writer.WriteUnprefixed("TUPLTYPE {0}\n", GetPamTupleType(image));
+                    writer.WriteUnprefixed("TUPLTYPE {0}\n", GetPamTupleType(header));
 
                     writer.WriteUnprefixed("ENDHDR\n");
                 }
                 else
                 {
                     // output width and height
-                    writer.WriteUnprefixed("{0} {1}\n", image.Header.Width, image.Header.Height);
+                    writer.WriteUnprefixed("{0} {1}\n", header.Width, header.Height);
 
                     // unless PBM (where the max value is always 1)
                     if (type != ImageType.PBM && type != ImageType.PlainPBM)
                     {
                         // output the max value
-                        writer.WriteUnprefixed("{0}\n", image.Header.HighestComponentValue);
+                        writer.WriteUnprefixed("{0}\n", header.HighestComponentValue);
                     }
 
                     // the header's final newline

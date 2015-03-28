@@ -344,5 +344,80 @@ namespace RavuAlHemio.PbmNet
                 }
             }
         }
+
+        /// <summary>
+        /// Writes a row of image data into the stream in the given format.
+        /// </summary>
+        /// <param name="image">The image whose row is being encoded (for formatting purposes).</param>
+        /// <param name="row">The row to write.</param>
+        /// <param name="stream">The stream to write into.</param>
+        /// <param name="type">The format according to which to write.</param>
+        public void WriteImageRow<TPixelComponent>(NetpbmImage<TPixelComponent> image, IEnumerable<TPixelComponent> row, Stream stream, ImageType type)
+        {
+            using (var writer = new NetpbmBinaryWriter(stream, new UTF8Encoding(false, true), leaveOpen: true))
+            {
+                bool isPlain;
+                switch (type)
+                {
+                    case ImageType.PBM:
+                    case ImageType.PGM:
+                    case ImageType.PPM:
+                    case ImageType.PAM:
+                    case ImageType.BigPAM:
+                        isPlain = false;
+                        break;
+                    case ImageType.PlainPBM:
+                    case ImageType.PlainPGM:
+                    case ImageType.PlainPPM:
+                        isPlain = true;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("type", type, "unknown image type");
+                }
+
+                if (isPlain)
+                {
+                    // output row as decimal numbers
+                    // add a newline after the row to make things nicer
+
+                    foreach (var value in row)
+                    {
+                        writer.WriteUnprefixed(value.ToString());
+                        writer.Write(' ');
+                    }
+                    writer.Write('\n');
+                }
+                else if (type == ImageType.PBM)
+                {
+                    // special case: bit-packed format!
+                    var values = new List<TPixelComponent>(8);
+                    foreach (var value in row)
+                    {
+                        values.Add(value);
+
+                        if (values.Count == 8)
+                        {
+                            byte theByte = EncodeBitmapValuesIntoByte(image, values);
+                            writer.Write(theByte);
+                            values.Clear();
+                        }
+                    }
+
+                    if (values.Count != 0)
+                    {
+                        byte theByte = EncodeBitmapValuesIntoByte(image, values);
+                        writer.Write(theByte);
+                    }
+                }
+                else
+                {
+                    // just the big endian bytes
+                    foreach (var value in row)
+                    {
+                        writer.Write(image.ComponentToBigEndianBytes(value).ToArray());
+                    }
+                }
+            }
+        }
     }
 }

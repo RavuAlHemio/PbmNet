@@ -106,8 +106,8 @@ namespace RavuAlHemio.PbmNet
         {
             get
             {
-                var retRows = Rows.Select(r => (IList<TPixelComponent>)new List<TPixelComponent>(r)).ToList();
-                return new ReadOnlyCollection<IList<TPixelComponent>>(retRows);
+                var retRows = Rows.Select(r => new ReadOnlyEnumerableShim<TPixelComponent>(r));
+                return new ReadOnlyEnumerableShim<IEnumerable<TPixelComponent>>(retRows);
             }
         }
 

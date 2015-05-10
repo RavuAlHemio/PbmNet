@@ -172,12 +172,27 @@ namespace RavuAlHemio.PbmNet
         {
             // collapses the IEnumerable<IEnumerable> into a List<List>
             var myRows = new List<IList<TPixelComponent>>(Header.Height);
+
+            // pre-allocate the lists
+            for (int i = 0; i < Header.Height; ++i)
+            {
+                myRows.Add(new List<TPixelComponent>(Header.Width*Header.Components.Count));
+            }
+
+            int rowI = -1;
             foreach (var row in Rows)
             {
-                List<TPixelComponent> rowPixels;
+                ++rowI;
+                if (rowI >= Header.Height)
+                {
+                    throw new InvalidDataException(
+                        string.Format("image has at least {0} rows, must have {1}", rowI + 1, Header.Height));
+                }
+
+                List<TPixelComponent> rowPixels = (List<TPixelComponent>)myRows[rowI];
                 try
                 {
-                    rowPixels = new List<TPixelComponent>(row);
+                    rowPixels.AddRange(row);
                 }
                 catch (OverflowException exc)
                 {
@@ -200,15 +215,8 @@ namespace RavuAlHemio.PbmNet
                             myRows.Count, badPixel / Header.Components.Count, badPixel % Header.Components.Count,
                             Header.HighestComponentValue, rowPixels[badPixel]));
                 }
-
-                myRows.Add(rowPixels);
-                if (myRows.Count > Header.Height)
-                {
-                    throw new InvalidDataException(
-                        string.Format("image has at least {0} rows, must have {1}", myRows.Count, Header.Height));
-                }
             }
-            if (myRows.Count != Header.Height)
+            if (rowI != Header.Height - 1)
             {
                 throw new InvalidDataException(
                     string.Format("image has {0} rows, must have {1}", myRows.Count, Header.Height));

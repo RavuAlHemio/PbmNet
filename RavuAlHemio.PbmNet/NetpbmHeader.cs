@@ -37,7 +37,7 @@ namespace RavuAlHemio.PbmNet
         public IList<Component> Components { get { return new ReadOnlyCollection<Component>(_components); } }
 
         /// <summary>
-        /// The largest possible value of a pixel component. (The lowest possible value is always <value>0</value>.)
+        /// The largest possible value of a pixel component. (The lowest possible value is always <c>0</c>.)
         /// </summary>
         public TPixelComponent HighestComponentValue { get; private set; }
 

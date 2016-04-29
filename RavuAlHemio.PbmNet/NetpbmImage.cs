@@ -21,13 +21,13 @@ namespace RavuAlHemio.PbmNet
 
         /// <summary>
         /// The actual rows of the image; drill down from rows to pixels. Each pixel is represented as a sequence of
-		/// components within the row; therefore, each row has <see cref="Width"/> times <see cref="Components"/>.Count
-		/// elements.
+		/// components within the row; therefore, each row has <see cref="NetpbmHeader{TPixelComponent}.Width"/> times
+		/// <see cref="NetpbmHeader{TPixelComponent}.Components"/>.Count elements.
         /// </summary>
         protected IEnumerable<IEnumerable<TPixelComponent>> Rows { get; set; }
 
         /// <summary>
-        /// Scales a pixel into the interval [<value>0.0</value>, <value>1.0</value>].
+        /// Scales a pixel into the interval [<c>0.0</c>, <c>1.0</c>].
         /// </summary>
         public abstract double ScalePixelComponent(TPixelComponent pixelComponent);
 
@@ -54,13 +54,13 @@ namespace RavuAlHemio.PbmNet
 
         /// <summary>
         /// Obtains the actual values of the pixel at the given coordinates, as a list of components (in the order
-        /// given by <see cref="Components"/>). Each value lies within the interval [<value>0</value>,
-        /// <see cref="HighestComponentValue"/>].
+        /// given by <see cref="NetpbmHeader{TPixelComponent}.Components"/>). Each value lies within the interval
+        /// [<c>0</c>, <see cref="NetpbmHeader{TPixelComponent}.HighestComponentValue"/>].
         /// </summary>
         /// <param name="x">The zero-based X coordinate of the pixel to fetch.</param>
         /// <param name="y">The zero-based Y coordinate of the pixel to fetch.</param>
-        /// <returns>A list of pixel values within the interval [<value>0</value>,
-        /// <see cref="HighestComponentValue"/>].</returns>
+        /// <returns>A list of pixel values within the interval [<c>0</c>,
+        /// <see cref="NetpbmHeader{TPixelComponent}.HighestComponentValue"/>].</returns>
         public IList<TPixelComponent> GetNativePixel(int x, int y)
         {
             if (x < 0 || x >= Header.Width)
@@ -82,12 +82,12 @@ namespace RavuAlHemio.PbmNet
 
         /// <summary>
         /// Obtains the values of the pixel at the given coordinates, as a list of components (in the order
-        /// given by <see cref="Components"/>). Each value is scaled to lie within the interval [<value>0.0</value>,
-        /// <value>1.0</value>].
+        /// given by <see cref="NetpbmHeader{TPixelComponent}.Components"/>). Each value is scaled to lie within the
+        /// interval [<c>0.0</c>, <c>1.0</c>].
         /// </summary>
         /// <param name="x">The zero-based X coordinate of the pixel to return.</param>
         /// <param name="y">The zero-based Y coordinate of the pixel to return.</param>
-        /// <returns>A list of pixel values within the interval [<value>0.0</value>, <value>1.0</value>].</returns>
+        /// <returns>A list of pixel values within the interval [<c>0.0</c>, <c>1.0</c>].</returns>
         public IList<double> GetScaledPixel(int x, int y)
         {
             var retArray = GetNativePixel(x, y).Select(ScalePixelComponent).ToArray();
@@ -132,8 +132,8 @@ namespace RavuAlHemio.PbmNet
         }
 
         /// <summary>
-        /// Returns whether the pixel component is in the allowed range (i.e. in the interval [<value>0</value>,
-        /// <see cref="HighestComponentValue"/>].
+        /// Returns whether the pixel component is in the allowed range (i.e. in the interval [<c>0</c>,
+        /// <see cref="NetpbmHeader{TPixelComponent}.HighestComponentValue"/>].
         /// </summary>
         /// <returns><c>true</c> if the pixel component is in range; otherwise, <c>false</c>.</returns>
         /// <param name="component">The pixel component to test.</param>

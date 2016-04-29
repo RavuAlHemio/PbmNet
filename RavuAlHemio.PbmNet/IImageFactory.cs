@@ -46,7 +46,7 @@ namespace RavuAlHemio.PbmNet
 
         /// <summary>
         /// Reads a row from the stream. A row consists of <paramref name="width"/> times
-        /// <paramref name="componentCount"/> values, each of a value from <value>0</value> to
+        /// <paramref name="componentCount"/> values, each of a value from <c>0</c> to
         /// <paramref name="highestComponentValue"/>.
         /// </summary>
         /// <param name="stream">The stream to read a row from.</param>

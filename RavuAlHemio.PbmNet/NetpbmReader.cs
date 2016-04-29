@@ -33,10 +33,10 @@ namespace RavuAlHemio.PbmNet
         /// <summary>
         /// Skips whitespace (as defined in <see cref="NetpbmWhiteSpaceBytes"/>), if any, and returns the first
         /// non-whitespace byte in the stream. If end-of-file is reached before a non-whitespace character, returns
-        /// <value>-1</value>.
+        /// <c>-1</c>.
         /// </summary>
         /// <param name="stream">The stream from which to read.</param>
-        /// <returns>The first non-whitespace character in <paramref name="stream"/>, or <value>-1</value> if
+        /// <returns>The first non-whitespace character in <paramref name="stream"/>, or <c>-1</c> if
         /// end-of-file is reached.</returns>
         private static int SkipWhitespaceAndReturnFirstNonWhitespaceByte(Stream stream)
         {
@@ -53,7 +53,7 @@ namespace RavuAlHemio.PbmNet
         /// <summary>
         /// Skips a comment (discards everything until a carriage return or newline is encountered).
         /// </summary>
-        /// <remarks>Call after encountering a hash (<value>'#'</value>) byte in <paramref name="stream"/>.</remarks>
+        /// <remarks>Call after encountering a hash (<c>'#'</c>) byte in <paramref name="stream"/>.</remarks>
         /// <param name="throwOnEndOfFile">If <c>true</c>, throws <see cref="EndOfStreamException"/> if end-of-file is
         /// encountered; otherwise, simply returns.</param>
         /// <param name="stream">The stream from which to discard characters.</param>

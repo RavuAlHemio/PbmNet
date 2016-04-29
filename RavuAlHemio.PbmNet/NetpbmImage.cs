@@ -21,8 +21,8 @@ namespace RavuAlHemio.PbmNet
 
         /// <summary>
         /// The actual rows of the image; drill down from rows to pixels. Each pixel is represented as a sequence of
-		/// components within the row; therefore, each row has <see cref="NetpbmHeader{TPixelComponent}.Width"/> times
-		/// <see cref="NetpbmHeader{TPixelComponent}.Components"/>.Count elements.
+        /// components within the row; therefore, each row has <see cref="NetpbmHeader{TPixelComponent}.Width"/> times
+        /// <see cref="NetpbmHeader{TPixelComponent}.Components"/>.Count elements.
         /// </summary>
         protected IEnumerable<IEnumerable<TPixelComponent>> Rows { get; set; }
 

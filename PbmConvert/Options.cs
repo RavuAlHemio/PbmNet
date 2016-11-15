@@ -1,5 +1,4 @@
 ﻿using CommandLine;
-using CommandLine.Text;
 using RavuAlHemio.PbmNet;
 
 namespace PbmConvert
@@ -14,13 +13,5 @@ namespace PbmConvert
 
         [Option('o', "output", Required = true, HelpText = "The name of the file into which the converted Netpbm image will be stored.")]
         public string OutputFilename { get; set; }
-
-        [ParserState]
-        public IParserState LastParserState { get; set; }
-
-        public string GetUsage()
-        {
-            return HelpText.AutoBuild(this, current => HelpText.DefaultParsingErrorsHandler(this, current));
-        }
     }
 }

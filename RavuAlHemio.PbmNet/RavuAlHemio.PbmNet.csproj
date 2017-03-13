@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Portable .NET library for reading and writing files in the Netpbm formats.</Description>
+    <Copyright>Copyright © 2016 Ondřej Hošek</Copyright>
+    <AssemblyTitle>RavuAlHemio.PbmNet</AssemblyTitle>
+    <VersionPrefix>0.0.9</VersionPrefix>
+    <Authors>Ondřej Hošek</Authors>
+    <TargetFrameworks>netstandard1.1;net45</TargetFrameworks>
+    <DebugType>portable</DebugType>
+    <AssemblyName>RavuAlHemio.PbmNet</AssemblyName>
+    <PackageId>RavuAlHemio.PbmNet</PackageId>
+    <PackageTags>netpbm;pbm;pnm;pgm;ppm</PackageTags>
+    <PackageProjectUrl>https://github.com/RavuAlHemio/PbmNet</PackageProjectUrl>
+    <PackageLicenseUrl>https://creativecommons.org/publicdomain/zero/1.0/</PackageLicenseUrl>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/RavuAlHemio/PbmNet.git</RepositoryUrl>
+    <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.1' ">1.6.0</NetStandardImplicitPackageVersion>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.1' ">
+    <PackageReference Include="System.Diagnostics.Contracts" Version="4.0.1" />
+    <PackageReference Include="System.Runtime.Numerics" Version="4.0.1" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <Reference Include="System.Numerics" />
+    <Reference Include="System" />
+    <Reference Include="Microsoft.CSharp" />
+  </ItemGroup>
+
+</Project>
